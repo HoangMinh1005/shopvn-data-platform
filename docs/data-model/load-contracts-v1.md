@@ -27,7 +27,7 @@ Rerun cùng input: cùng business keys/measure phải không đổi; loaded_at/r
 | dim_voucher/geography/warehouse | Type1/append master mapping cho thuộc tính hiện quan sát; không khẳng định lịch sử thuộc tính chưa có nguồn |
 | fact_order/sales_line/return/shipment | MERGE identity nguồn, refresh measures/status từ snapshot được phê chuẩn; no fact-to-fact BI joins |
 | fact_inventory_transaction/review | MERGE ID cho initial/replay, detect source mutation; business timestamps unreliable phải mang flag |
-| fact_inventory_daily_snapshot | MERGE product/warehouse/day chỉ cho snapshot có cutoff hợp lệ; backfill June blocked |
+| fact_inventory_daily_snapshot | BR32: MERGE product/warehouse/day cho actual EOD snapshot từ inventory_go_live_date, có cutoff hợp lệ; backfill June blocked, không tạo history simulated cho MVP |
 | marts | Rebuild affected business partitions từ cùng publication snapshot set, sau reconciliation |
 
 Bronze partition theo ingestion day; fact lớn có thể dùng month(order_date) khi dữ liệu/query đủ căn cứ. Dimension nhỏ và bảng nhỏ ban đầu unpartitioned. Không partition customer_id/product_id. Compaction và snapshot retention là maintenance, không xóa file MinIO thủ công.
@@ -47,6 +47,8 @@ Bronze partition theo ingestion day; fact lớn có thể dùng month(order_date
 | Marketplace Decimal-vs-source delta -1 VND và khớp float source | Formula warning theo evidence P03; preserve reported net, source-target reconciliation vẫn exact. Mọi mức lệch mới phải review/block |
 | SCD overlaps/multiple current | Block dimension và dependent facts |
 | Inventory business-time unreliable | Chặn historical EOD/stockout historical claims, không chặn current stock |
+
+Theo BR31, certified Direct Finance view chọn net_customer_amount (FIN02); merchandise_less_order_refund_proxy luôn có nhãn proxy và không dùng thay headline. Theo BR32, inventory_go_live_date lấy từ cấu hình/metadata lúc pipeline bắt đầu quan sát; không tự đặt bằng source.last_updated hoặc ngày chạy backfill. DQ reject mọi actual daily snapshot trước mốc đó.
 
 ## Late events và Kafka
 

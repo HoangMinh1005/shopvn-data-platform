@@ -1,6 +1,6 @@
-# KPI contracts v1
+# KPI contracts — phiên bản 1.1
 
-Nghiệp vụ tham chiếu [BR01–BR30](business-rules-v1.md). Tiền dùng VND, Decimal/integer arithmetic; ngày báo cáo theo Asia/Ho_Chi_Minh. Contract ghi đủ công thức, grain, thời gian, eligibility và giới hạn để người viết SQL không tự suy nghĩa. Data owner dưới đây là vai trò trong đồ án; nhóm điền tên người review khi phân công.
+Nghiệp vụ tham chiếu [BR01–BR32, rule version 1.1](business-rules-v1.md). BR31/BR32 được duyệt sau profiling ngày 2026-11-11, ghi tại [biên bản thay đổi](decisions/2026-11-11-finance-inventory.md). Tiền dùng VND, Decimal/integer arithmetic; ngày báo cáo theo Asia/Ho_Chi_Minh. Contract ghi đủ công thức, grain, thời gian, eligibility và giới hạn để người viết SQL không tự suy nghĩa. Data owner dưới đây là vai trò trong đồ án; nhóm điền tên người review khi phân công.
 
 ## Quy tắc dùng chung
 
@@ -16,7 +16,7 @@ Nghiệp vụ tham chiếu [BR01–BR30](business-rules-v1.md). Tiền dùng VND
 | ID | KPI / grain | Công thức và nguồn | Ngày / giới hạn |
 |---|---|---|---|
 | FIN01 | Direct merchandise after discounts / order rồi day-channel | orders.subtotal - orders.discount_amount | order_date, eligible direct, trước refund/shipping |
-| FIN02 | Net customer amount after refund / order rồi day-channel | orders.total_amount - SUM(returns.refund_amount WHERE refunded) | order_date restated; khớp phép tính đề bài; bao gồm shipping thu khách |
+| FIN02 | **Direct Finance KPI chính:** net customer amount after refund / order rồi day-channel | orders.total_amount - SUM(returns.refund_amount WHERE refunded) | BR31; order_date restated; bao gồm shipping thu khách; không cộng với marketplace reported net như cùng một basis |
 | FIN03 | Merchandise less order refunds — **proxy** / order rồi day-channel | FIN01 - SUM(refunded amount) | Refund source có shipping; có thể âm, chưa phải net merchandise chính xác. Giới hạn P01 trong profiling |
 | FIN04 | Marketplace merchandise / line rồi day-partner | SUM(sale_price * quantity_sold) | order_date, completed; sale_price đã sau platform discount |
 | FIN05 | Marketplace partner-reported net / line rồi day-partner | SUM(net_revenue nguồn) | order_date, completed; không trừ commission/discount lần hai |
@@ -61,7 +61,7 @@ OPS07 là default đề xuất làm rõ vì BR22 chưa xác định bộ return 
 | ID | KPI / grain | Công thức | Giới hạn |
 |---|---|---|---|
 | INV01 | Current stock / product-observed_at | inventory.stock_qty | Có nguồn hiện tại, warehouse có trong inventory |
-| INV02 | EOD stock / product-business-day | Anchor - signed changes sau EOD đến cùng anchor cutoff | **Blocked cho lịch sử tháng 6**: timestamp nguồn không hợp lệ làm business time; chỉ snapshot go-live hoặc lịch sử mô phỏng tách riêng |
+| INV02 | Observed EOD stock / product-warehouse-business-day | Snapshot thực tế tại cutoff cuối ngày hợp lệ, từ inventory_go_live_date | BR32: chặn backfill tháng 6/2026; snapshot giữa ngày chỉ là current stock. Không dựng ngược từ timestamp nguồn sai hoặc dùng history simulated cho MVP |
 | INV03 | Days of stock / product-as_of | current_stock / (eligible units sold 7 ngày gồm ngày 0 sales /7) | Avg=0 -> NULL; không đủ window -> incomplete, không ngoại suy từ June sang ngày hiện tại |
 | INV04 | Sell-through / product-period | units sold / (opening stock + eligible receipts) | Chưa publish khi inventory history chưa đủ căn cứ; không dùng INV03 thay sell-through |
 | INV05 | Loss estimate / product/channel-period | Direct net line sau phân bổ header discount - quantity*cost_as_observed; marketplace thêm view reported_net-quantity*cost | Trước product refund, thiếu historical cost/cost vận hành; không gọi net profit |

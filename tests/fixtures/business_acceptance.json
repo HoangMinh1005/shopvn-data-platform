@@ -1,5 +1,12 @@
 {
   "description": "Synthetic VND examples; expected results calculated independently by hand.",
+  "policy": {
+    "rule_version": "1.1",
+    "finance_primary_kpi": "FIN02",
+    "finance_primary_fact_measure": "net_customer_amount",
+    "finance_primary_reference_measure": "customer_total_after_refund",
+    "inventory_history": "observed_from_go_live_only"
+  },
   "orders": [
     {"id":"O1","customer":"C1","status":"delivered","payment":"paid","subtotal":100000,"discount":10000,"shipping":15000},
     {"id":"O2","customer":"C1","status":"returned","payment":"paid","subtotal":200000,"discount":0,"shipping":20000},

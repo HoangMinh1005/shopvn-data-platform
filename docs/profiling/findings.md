@@ -35,11 +35,13 @@ Chi tiết aggregate/schema được xuất bằng `scripts/profile_sources.py` 
 
 Giữ phép tính đã duyệt để đối chiếu, nhưng đặt nhãn **merchandise less order refund — proxy**; không công bố là net merchandise revenue chính xác. Chỉ tiêu net customer amount = total_amount - refunded_amount ở cấp order có căn cứ đối soát tốt hơn. Chính sách tách shipping refund còn mở; không tự chia hoặc clamp về 0.
 
+Kết quả xử lý đã được người dùng duyệt: BR31 chọn net customer amount làm Direct Finance KPI chính, giữ merchandise-less-refund là proxy. Không yêu cầu tách shipping refund để publish FIN02; source limitation vẫn giữ nguyên.
+
 ### P02 — Không đủ căn cứ dựng EOD tháng 6
 
 Snapshot inventory.last_updated nằm trong 2026-08-06 07:30:51; 439722 transaction đều sau anchor, từ 07:31:14 đến 07:31:15 cùng ngày. Đây có dấu hiệu là timestamp lúc sinh/nạp dữ liệu, không phải ngày business movement tháng 6.
 
-Không dùng trực tiếp phép dựng ngược trong guide để tuyên bố tồn cuối từng ngày tháng 6. Có thể lưu current stock và snapshot từ go-live. Backfill lịch sử bị chặn đến khi có business effective time/anchor phù hợp, hoặc một bộ mô phỏng riêng ghi rõ assumed history. Không suy ngày movement từ order_date như lịch sử thật.
+Không dùng trực tiếp phép dựng ngược trong guide để tuyên bố tồn cuối từng ngày tháng 6. BR32 đã được người dùng duyệt: MVP lưu current stock và actual snapshots từ go-live, chặn June backfill, không thêm history simulated cho MVP. Không suy ngày movement từ order_date như lịch sử thật.
 
 ### P03 — Lệch công thức marketplace cần giữ provenance
 

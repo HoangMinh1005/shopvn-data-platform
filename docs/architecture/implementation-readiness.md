@@ -6,6 +6,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 
 - [x] Tổ chức repository và chuyển tài liệu cũ vào vị trí phù hợp.
 - [x] Ghi nhận 30 quyết định nghiệp vụ được duyệt.
+- [x] Ghi bổ sung BR31/BR32 đã được duyệt sau profiling: Finance FIN02 chính, inventory chỉ từ go-live; rule version 1.1.
 - [x] Ghi baseline stack, model và các giới hạn chưa kiểm chứng.
 - [x] Tách cấu hình nguồn và chỗ dành cho platform.
 - [x] Thêm hướng dẫn Git, env template và CI kiểm tra repository.
@@ -25,7 +26,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Ghi identity, update/delete, incremental, backfill/idempotency; chặn phần thiếu nguồn.
 - [x] Tạo KPI contracts với business-rule IDs, phân biệt approved với chi tiết pending.
 - [x] Vẽ ERD hiện hành bằng Mermaid; không dùng ERD legacy làm bản cuối.
-- [x] Tạo fixture giả lập và chạy 15 reference/unit tests; không coi là production integration tests.
+- [x] Tạo fixture giả lập và chạy 20 reference/unit tests sau BR31/BR32; không coi là production integration tests.
 
 ## Giai đoạn 3 — Technical spike
 

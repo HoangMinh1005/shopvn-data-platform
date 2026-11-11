@@ -4,11 +4,11 @@ Ngày thực hiện: 2026-11-11. Thực hiện trên repo đã đổi tên `shop
 
 | Hạng mục | Kết quả | Gate |
 |---|---|---|
-| Ghi quyết định/KPI contracts | BR01–BR30 giữ nguyên; KPI contracts có grain/formula/date/scope/owner, ghi rõ chi tiết còn đề xuất | Có tài liệu; P01 cần xác nhận KPI chính sau khi phát hiện refund có shipping |
-| Profiling | Đọc 9 bảng bằng SELECT-only; stream/checksum 90 file dự kiến; API mẫu 50 order + lặp 1 order | Hoàn thành trong phạm vi ghi rõ; P02 chặn historical inventory |
+| Ghi quyết định/KPI contracts | BR01–BR30 giữ lịch sử, bổ sung BR31/BR32 đã được duyệt; rule version 1.1 | P01 đã chốt: FIN02 là Direct Finance KPI chính, FIN03 là proxy |
+| Profiling | Đọc 9 bảng bằng SELECT-only; stream/checksum 90 file dự kiến; API mẫu 50 order + lặp 1 order | P02 đã chốt phạm vi: current stock + snapshot go-live; June backfill bị chặn, không coi yêu cầu lịch sử đã hoàn thành |
 | Thiết kế bảng | 8 dims, 8 facts, shared audit, data dictionary, load/identity/DQ contracts, ERD Mermaid | Sẵn sàng vertical slice direct sales; warehouse history/actual payout/item refund không tự tạo |
 | Technical spike | Có Compose isolated, source-build MinIO, Spark Python3.11/Java17 Dockerfile, runner MERGE/schema/replay/Trino/restart | **Chưa đạt**: artifact/image downloads không hoàn tất, chưa chạy Spark MERGE hay Trino query |
-| Nghiệm thu | Synthetic fixture với số tính tay và 15 unit/reference checks đã pass | Chứng minh reference business calculations; chưa chứng minh production Spark pipeline |
+| Nghiệm thu | Synthetic fixture với số tính tay và 20 unit/reference checks sau BR31/BR32 | Chứng minh reference business calculations và scope gate; chưa chứng minh production Spark pipeline |
 
 ## Evidence
 
@@ -28,11 +28,16 @@ Ngày thực hiện: 2026-11-11. Thực hiện trên repo đã đổi tên `shop
 5. BuildKit tải Iceberg JAR gặp unexpected EOF. Maven HEAD và small range requests hoạt động; probe 1 MiB chỉ nhận 638976 byte trong 25 giây rồi timeout. Downloader có range cache/retry, nhưng chưa tải và verify đủ toàn bộ artifacts.
 6. Trino 484 registry manifest và digest đã resolve; image pull chưa xác nhận hoàn tất. Không xem resolve manifest là runtime compatibility test.
 7. Resolve Python base image sau đó gặp TLS handshake timeout với Docker Hub auth endpoint. Đã dừng các download client do lượt làm việc này khởi tạo, giữ 100 phần cache (13107200 bytes) trong runtime/spike-build để tải tiếp; không có service spike đang chạy. Không sửa proxy/firewall hoặc cấu hình mạng của máy.
+8. Sau khi BR31/BR32 được duyệt, kiểm tra lại Maven range 128 KiB thành công HTTP 206 trong 2.10 giây. Chưa tải đủ artifact, chưa build/rerun core spike; kiểm tra nhỏ này không thay đổi trạng thái chưa đạt của technical spike.
 
-## Các quyết định chưa được tự suy
+## Hai quyết định bổ sung đã được duyệt
 
-- P01: ưu tiên FIN02 net customer amount làm Finance KPI chính, FIN03 giữ proxy, hoặc giữ FIN03 làm KPI chính có nhãn proxy. Đã gửi câu hỏi cho người dùng; chưa đổi BR01 âm thầm.
-- P02: current stock + snapshot go-live, chặn June backfill; hoặc history simulated riêng. Chưa giả lịch sử từ source created_at.
+- P01 / BR31: FIN02 net customer amount là Direct Finance KPI chính, FIN03 giữ nhãn proxy.
+- P02 / BR32: current stock + snapshot thực từ go-live; chặn June backfill. Không thêm lịch sử mô phỏng cho MVP.
+
+Chi tiết và ảnh hưởng xem [biên bản phê duyệt](../business/decisions/2026-11-11-finance-inventory.md). Các quyết định này đóng câu hỏi về phạm vi, không sửa thiếu sót nguồn hoặc chứng nhận spike đã pass.
+
+## Các chi tiết khác còn cần làm rõ
 - OPS07: bộ statuses cho aggregate return-request rate cần duyệt; có thể báo status distribution trước.
 - Timestamp without timezone cần chủ nguồn xác nhận, không lấy server UTC làm bằng chứng business timezone.
 

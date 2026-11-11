@@ -1,7 +1,8 @@
-"""Golden examples correspond to business rules v1; all data is synthetic."""
+"""Golden examples correspond to business rules v1.1; all data is synthetic."""
 
 import json
 from copy import deepcopy
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ from shopvn.quality.acceptance import (
     direct_summary,
     marketplace_summary,
     reconstruct_stock,
+    require_observed_inventory_period,
 )
 
 FIXTURE = json.loads((Path(__file__).parents[1] / "fixtures/business_acceptance.json").read_text())
@@ -100,3 +102,21 @@ def test_kafka_replay_is_deduplicated_and_conflict_rejected():
 def test_same_fixture_three_times_produces_identical_metrics():
     results = [direct_summary(FIXTURE["orders"], FIXTURE["lines"], FIXTURE["returns"]) for _ in range(3)]
     assert results[0] == results[1] == results[2]
+
+
+def test_approved_finance_primary_uses_customer_total_including_shipping():
+    result = direct_summary(FIXTURE["orders"], FIXTURE["lines"], FIXTURE["returns"])
+    primary = result[FIXTURE["policy"]["finance_primary_reference_measure"]]
+    assert primary == 300002
+    assert primary != result["adjusted_merchandise"]
+
+
+@pytest.mark.parametrize("snapshot_day", [date(2026, 6, 1), date(2026, 6, 30)])
+def test_june_inventory_backfill_is_rejected_by_approved_scope(snapshot_day):
+    with pytest.raises(ValueError, match="BR32"):
+        require_observed_inventory_period(snapshot_day, date(2026, 11, 11))
+
+
+@pytest.mark.parametrize("snapshot_day", [date(2026, 11, 11), date(2026, 11, 12)])
+def test_inventory_period_gate_accepts_go_live_and_later(snapshot_day):
+    require_observed_inventory_period(snapshot_day, date(2026, 11, 11))

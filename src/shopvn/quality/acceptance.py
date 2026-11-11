@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from decimal import ROUND_FLOOR, Decimal
 
 
@@ -100,4 +100,11 @@ def deduplicate_events(events: list[dict]) -> list[dict]:
 
 
 def reconstruct_stock(anchor_quantity: int, later_changes: list[int]) -> int:
+    """Synthetic balance arithmetic only; not authorization for BR32-blocked backfill."""
     return anchor_quantity - sum(later_changes)
+
+
+def require_observed_inventory_period(snapshot_day: date, go_live_day: date) -> None:
+    """BR32 reference gate; the deployed pipeline must supply its configured go-live date."""
+    if snapshot_day < go_live_day:
+        raise ValueError("BR32: inventory snapshot before go-live is outside the approved MVP")

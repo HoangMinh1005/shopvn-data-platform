@@ -2,6 +2,8 @@
 
 Thiết kế cột dựa trên [schema đã profiling](../profiling/observed-profile.json), [findings](../profiling/findings.md) và [KPI contracts](../business/kpi-contracts-v1.md). Đây là implementation contract dự kiến, chưa phải DDL đã nạp toàn bộ dữ liệu thật. Những bảng/cột bị hạn chế được ghi rõ.
 
+Áp dụng rule version 1.1 (BR31/BR32): net_customer_amount là Direct Finance primary measure; daily inventory chỉ có actual snapshots từ go-live, không backfill June 2026.
+
 ## Quy ước type và audit
 
 `!` = NOT NULL, `?` = nullable. `SK` = BIGINT surrogate key, unknown = 0. `DK` = INT YYYYMMDD, unknown = 0. `M` = DECIMAL(20,2), currency_code = VND. `TS` = TIMESTAMP UTC (Spark) với timezone contract; Trino đọc theo UTC và đổi local khi lấy business day. Không dùng FLOAT cho tiền. Với source created_at/last_updated không có timezone: Silver giữ TIMESTAMP_NTZ + source_timezone chưa xác nhận; cột Gold UTC tương ứng chưa được publish cho đến khi contract timezone đủ căn cứ, không tự áp server UTC.
@@ -123,7 +125,7 @@ Không tự tạo warehouse name/type/province hoặc government geography codes
 | source_total_amount | M! | orders.total_amount, giữ kể cả bug clamp |
 | merchandise_amount | M! | subtotal-header discount, không tự clamp |
 | refunded_order_amount | M! | SUM refunded return theo order; default 0 |
-| net_customer_amount | M! | source_total_amount-refunded_order_amount |
+| net_customer_amount | M! | source_total_amount-refunded_order_amount; Direct Finance KPI chính FIN02 theo BR31 |
 | merchandise_less_order_refund_proxy | M! | merchandise-refunded_order_amount, giới hạn P01 |
 | is_revenue_eligible | BOOLEAN! | BR02 + BR27; giữ excluded order trong fact để audit |
 | has_excess_discount | BOOLEAN! | discount > subtotal |
@@ -218,12 +220,12 @@ Không tự gán warehouse/cost lịch sử. Transaction vẫn audit được nh
 
 | Cột | Type | Mapping |
 |---|---|---|
-| snapshot_date_key | DK! FK / PK thành phần | Business EOD đã thu thập, không giả lập lịch sử tháng 6 |
+| snapshot_date_key | DK! FK / PK thành phần | Business EOD thực đã thu thập, không trước inventory_go_live_date; June backfill bị chặn theo BR32 |
 | product_key, warehouse_key | SK! FK / PK thành phần | Tại snapshot quan sát; inventory hiện 1:1 product |
 | stock_qty | BIGINT! | inventory.stock_qty |
 | source_last_updated | TS? | inventory.last_updated |
 | snapshot_cutoff_at | TS! | Cutoff thực tế của snapshot |
-| snapshot_method | STRING! | observed_current / reconstructed_verified / simulated |
+| snapshot_method | STRING! | observed_eod; current snapshot giữa ngày ở Silver, reconstructed/simulated không thuộc actual daily snapshot MVP BR32 |
 | history_reliable | BOOLEAN! | Phương pháp và nguồn có đủ business time |
 
 Nếu chỉ capture giữa ngày, lưu current snapshot riêng ở Silver; không gọi là EOD. Không cộng stock qua nhiều ngày. reserved/available/in_transit/value chưa có nguồn đủ.

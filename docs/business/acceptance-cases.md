@@ -21,6 +21,10 @@ Fixture: [business_acceptance.json](../../tests/fixtures/business_acceptance.jso
 | Stock anchor 100, later movements +20,-5 | Historical balance 85 khi business timestamps/anchor đã được xác minh; synthetic only |
 | Kafka cùng event_id và payload | Dedup còn 1 event; khác payload phải reject conflict |
 | Chạy cùng fixture 3 lần | Business metrics không đổi; không chứng minh storage idempotency cho pipeline chưa viết |
+| Finance primary theo BR31 | Fixture chọn FIN02=300002 VND; không chọn proxy 265002 VND thay headline |
+| Inventory BR32 | Với go-live giả lập 2026-11-11: June 1/30 bị chặn; Nov 11/12 qua gate thời gian. Đây không phải ngày go-live production được gán sẵn |
+
+Rule version hiện hành 1.1; tổng 20 reference/unit test cases. Inventory period gate chỉ kiểm tra phạm vi ngày, chưa xác minh đã quan sát đúng EOD/cutoff. Test dựng ngược số dư synthetic không cho phép backfill actual June trong MVP.
 
 Chạy bằng Python 3.11:
 
