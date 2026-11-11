@@ -1,0 +1,64 @@
+# Kiến trúc baseline v1
+
+Ngày ghi nhận: 2026-11-11. Stack được chọn trong hội thoại; **chưa được kiểm chứng bằng technical spike**. Danh sách dưới đây là mục tiêu triển khai, chưa phải lockfile hoặc chứng nhận tương thích end-to-end.
+
+## Kiến trúc
+
+```text
+PostgreSQL / SFTP / Logistics API
+                  |
+          Airflow batch jobs
+                  |
+             Spark / PySpark
+                  |
+    Bronze -> Silver -> Gold -> KPI marts
+        Iceberg v2 / Parquet / MinIO
+                  |
+           Trino -> Superset
+
+Python simulator -> Kafka KRaft -> Spark Structured Streaming
+                                      |
+                            Bronze/Silver simulated
+
+PostgreSQL platform: Iceberg JDBC catalog + Airflow/Superset metadata
+```
+
+## Stack đã chọn
+
+| Thành phần | Baseline |
+|---|---|
+| Python application | 3.11 |
+| Spark | 3.5.9, Scala 2.12; Java 17 cho Spark |
+| Table format | Iceberg 1.12.0, table format v2 |
+| File format | Parquet + ZSTD |
+| Storage | MinIO single-node; image tag/digest chốt sau spike |
+| Catalog | Iceberg JDBC Catalog trên PostgreSQL 16 |
+| Broker | Apache Kafka 4.3.2 KRaft, một node cho MVP |
+| Orchestrator | Airflow 3.4.0 LocalExecutor |
+| Spark provider | Candidate 6.3.4; kiểm chứng dependency với Spark 3.5 trước khi khóa |
+| Query engine | Trino 484; sử dụng JVM đi kèm image Trino, không áp Java 17 của Spark cho Trino |
+| BI | Superset 6.0.0, PostgreSQL metadata; cấu hình tối thiểu cho demo |
+| Deployment | Docker Compose, Linux containers trên WSL2 |
+| DQ | PySpark/SQL checks + audit tables |
+| Development | pytest, Ruff, SQLFluff, GitHub Actions; dependency khóa sau spike |
+
+Airflow, Spark và Superset dùng các image/môi trường riêng. Provider Spark mới có dependency client khác Spark engine; technical spike phải kiểm tra chính xác thay vì cài toàn bộ package mới nhất chung môi trường.
+
+## Ranh giới triển khai
+
+- Giữ PostgreSQL nguồn riêng với PostgreSQL platform.
+- Platform PostgreSQL có database/user riêng cho iceberg_catalog, airflow_meta, superset_meta.
+- Spark là writer chính cho analytics tables. Trino phục vụ certified views/BI; tránh nhiều writer sửa cùng bảng trong MVP.
+- Bronze/Silver giữ riêng theo nguồn; hợp nhất sales line sau khi conformed.
+- Batch công bố báo cáo chính thức. Kafka mô phỏng tách data_origin để tránh trộn với dữ liệu nguồn.
+- Streaming chạy service dài hạn riêng; Airflow điều phối batch, reconciliation và maintenance.
+- Nguồn chỉ được ingestion đọc; API extraction tập trung, có rate limit/retry, không gọi từ Spark executor.
+- Chưa đưa CDC/Debezium, Kafka Connect, Schema Registry hoặc Kubernetes vào MVP.
+
+## Monitoring là yêu cầu MVP
+
+Phải có giao diện/log trả lời được thời điểm hoàn thành, tình trạng service và đối soát doanh thu; có cảnh báo deadline trước 08:00 và runbook phục hồi trong 2 giờ theo đề bài. Airflow UI + audit dashboard + service health là baseline tối thiểu cần chứng minh. Có thể bổ sung Prometheus/Grafana, nhưng không lùi yêu cầu observability sang phase 2.
+
+## Cổng kiểm chứng
+
+Xem [readiness checklist](implementation-readiness.md). Mỗi image phải khóa tag/digest và mỗi JAR/provider phải có version sau khi spike thành công. Không sử dụng `latest` để triển khai baseline đã nghiệm thu.

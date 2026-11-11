@@ -1,0 +1,54 @@
+services:
+  postgres:
+    platform: ${SHOPVN_SOURCE_PLATFORM:-linux/arm64}
+    image: anhnguyen1611/masterclass-dataops-postgres:v1.1.0
+    ports:
+      - "${SHOPVN_DB_HOST_PORT:-5434}:5432"
+    environment:
+      POSTGRES_DB: ${SHOPVN_DB_NAME:-shopvn}
+      POSTGRES_USER: ${SHOPVN_DB_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${SHOPVN_DB_ADMIN_PASSWORD:?Set SHOPVN_DB_ADMIN_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+    networks:
+      - shopvn-net
+
+  api:
+    platform: ${SHOPVN_SOURCE_PLATFORM:-linux/arm64}
+    image: anhnguyen1611/masterclass-dataops-api:v1.1.0
+    ports:
+      - "${SHOPVN_API_HOST_PORT:-8000}:8000"
+    environment:
+      API_KEY: ${SHOPVN_LOGISTICS_API_KEY:?Set SHOPVN_LOGISTICS_API_KEY in .env}
+      RATE_LIMIT_PER_MIN: "100"
+      TIMEOUT_RATE: "0.05"
+      ERROR_RATE: "0.01"
+      NOT_FOUND_RATE: "0.08"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${SHOPVN_DB_NAME:-shopvn}
+      DB_USER: ${SHOPVN_DB_ADMIN_USER:-postgres}
+      DB_PASSWORD: ${SHOPVN_DB_ADMIN_PASSWORD:?Set SHOPVN_DB_ADMIN_PASSWORD in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - shopvn-net
+
+  sftp:
+    image: anhnguyen1611/masterclass-dataops-sftp:v1.1.0
+    ports:
+      - "${SHOPVN_SFTP_HOST_PORT:-2222}:22"
+    restart: unless-stopped
+    networks:
+      - shopvn-net
+
+networks:
+  shopvn-net:
+    name: shopvn-net
+    driver: bridge

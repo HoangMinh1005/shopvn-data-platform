@@ -1,0 +1,23 @@
+name: Repository checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check layout, documentation links and Git ignore
+        run: python scripts/check_repository.py
+      - name: Validate source Compose without starting services
+        run: docker compose --env-file .env.example -f infra/sources/docker-compose.yml config --quiet
