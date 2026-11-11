@@ -40,7 +40,7 @@ def main():
     source = ROOT / "runtime/spike-build/minio-source.tar.gz"
     with source.open("rb") as stream:
         source_sha = hashlib.file_digest(stream, "sha256").hexdigest()
-    lock = {"scope": "Verified core only; Airflow/Kafka/Superset runtime not yet validated",
+    lock = {"scope": "Verified core only; Airflow has a separate lock; Kafka/Superset runtime not yet validated",
             "images": images, "jar_sha256": jars,
             "minio_source_commit": "9e49d5e7a648f00e26f2246f4dc28e6b07f8c84a",
             "minio_source_archive_sha256": source_sha,

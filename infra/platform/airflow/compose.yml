@@ -1,0 +1,123 @@
+x-airflow: &airflow
+  image: shopvn-airflow:3.4.0-spark3.5.9
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &environment
+    AIRFLOW_HOME: /opt/airflow
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Ho_Chi_Minh
+    AIRFLOW__CORE__PARALLELISM: '2'
+    AIRFLOW__CORE__DAGS_FOLDER: /workspace/dags
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:?Bootstrap Airflow secrets}
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: 'admin:admin'
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/simple_auth_passwords.json
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:?Bootstrap Airflow secrets}@catalog:5432/airflow_meta
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET:?Bootstrap Airflow secrets}
+    AIRFLOW__API__SECRET_KEY: ${AIRFLOW_API_SECRET:?Bootstrap Airflow secrets}
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-api:8080/execution/
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__DAG_PROCESSOR__MIN_FILE_PROCESS_INTERVAL: '10'
+    AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: Asia/Ho_Chi_Minh
+    AIRFLOW_CONN_SPARK_LOCAL: '{"conn_type":"spark","host":"local[2]","extra":{"deploy-mode":"client","spark-binary":"spark-submit"}}'
+    SHOPVN_DB_HOST: ${SHOPVN_DB_HOST:-host.docker.internal}
+    SHOPVN_DB_HOST_PORT: ${SHOPVN_DB_HOST_PORT:-5434}
+    SHOPVN_DB_NAME: ${SHOPVN_DB_NAME:-shopvn}
+    SHOPVN_DB_READER_USER: ${SHOPVN_DB_READER_USER:-shopvn_reader}
+    SHOPVN_DB_READER_PASSWORD: ${SHOPVN_DB_READER_PASSWORD:?Set source reader password}
+    SPIKE_DB_PASSWORD: ${SPIKE_DB_PASSWORD:?Set catalog password}
+    SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set object store user}
+    SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set object store password}
+    OPS_DB_HOST: catalog
+    OPS_DB_NAME: airflow_meta
+    OPS_DB_USER: airflow
+    OPS_DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:?Bootstrap Airflow secrets}
+    TRINO_URL: http://trino:8080
+    MINIO_HEALTH_URL: http://minio:9000/minio/health/live
+    SPARK_LOCAL_IP: 127.0.0.1
+    PYSPARK_PYTHON: /usr/local/bin/python
+    PYSPARK_DRIVER_PYTHON: /usr/local/bin/python
+    PYTHONPATH: /workspace/src:/workspace/scripts:/opt/airflow/plugins
+  volumes:
+    - ../../../dags:/workspace/dags:ro
+    - ../../../src:/workspace/src:ro
+    - ../../../scripts:/workspace/scripts:ro
+    - ../../../sql:/workspace/sql:ro
+    - ../../../runtime:/workspace/runtime
+    - ../../../runtime/airflow:/opt/airflow
+  networks: [core]
+  extra_hosts: ['host.docker.internal:host-gateway']
+  restart: unless-stopped
+
+services:
+  airflow-init:
+    <<: *airflow
+    command: ['bash', '-c', 'airflow db migrate && python -c "from shopvn.orchestration.ops import initialize_schema; initialize_schema()" && airflow pools set spark_local 1 "One local Spark writer"']
+    restart: 'no'
+    mem_limit: 768m
+  airflow-api:
+    <<: *airflow
+    command: ['airflow', 'api-server', '--port', '8080', '--workers', '1']
+    ports: ['127.0.0.1:18081:8080']
+    depends_on:
+      airflow-init: {condition: service_completed_successfully}
+    mem_limit: 900m
+  airflow-scheduler:
+    <<: *airflow
+    command: ['airflow', 'scheduler']
+    depends_on:
+      airflow-init: {condition: service_completed_successfully}
+    mem_limit: 3g
+  airflow-dag-processor:
+    <<: *airflow
+    command: ['airflow', 'dag-processor']
+    depends_on:
+      airflow-init: {condition: service_completed_successfully}
+    mem_limit: 650m
+  pipeline-monitor:
+    <<: *airflow
+    command: ['python', '/workspace/scripts/pipeline_monitor.py']
+    environment:
+      <<: *environment
+      AIRFLOW_HEALTH_URL: http://airflow-api:8080/api/v2/monitor/health
+      MONITOR_PORT: '9108'
+      MONITOR_START_DATE: ${MONITOR_START_DATE:?Bootstrap monitoring start date}
+    ports: ['127.0.0.1:19108:9108']
+    mem_limit: 256m
+  prometheus:
+    image: prom/prometheus:v3.16.0@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.retention.time=7d']
+    ports: ['127.0.0.1:19090:9090']
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    networks: [core]
+    restart: unless-stopped
+    mem_limit: 320m
+  grafana:
+    image: grafana/grafana:13.3.1@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Bootstrap Grafana password}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+    ports: ['127.0.0.1:13000:3000']
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks: [core]
+    restart: unless-stopped
+    mem_limit: 450m
+
+networks:
+  core:
+    external: true
+    name: shopvn-readiness_default
+volumes:
+  prometheus-data:
+  grafana-data:

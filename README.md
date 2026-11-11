@@ -1,14 +1,14 @@
 # ShopVN Data Platform
 
-Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg và Kafka mô phỏng. Nghiệp vụ v1 đã được duyệt ngày 2026-11-11; repository hiện ở giai đoạn chuẩn bị triển khai.
+Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg và Kafka mô phỏng. Nghiệp vụ v1.1 đã được duyệt; repository hiện triển khai từng vertical slice, chưa hoàn thành full MVP.
 
 ## Trạng thái hiện tại
 
 - Đã tổ chức tài liệu, ghi nhận nghiệp vụ đã duyệt và khởi tạo Git repository.
 - Có Compose cho ba nguồn PostgreSQL, Logistics API và SFTP.
-- Core Spark–Iceberg–MinIO–JDBC Catalog–Trino đã chạy thành công. Direct Finance có Bronze/Silver/Gold, source reconciliation và biểu đồ từ Trino; Airflow/Kafka/Superset chưa triển khai.
+- Core Spark–Iceberg–MinIO–JDBC Catalog–Trino đã chạy thành công. Direct Finance có Bronze/Silver/Gold, source reconciliation và biểu đồ từ Trino; đã có Airflow orchestration và Prometheus/Grafana giám sát. Kafka/Superset chưa triển khai.
 - ERD và kế hoạch cũ được giữ trong `legacy/`; đọc baseline hiện hành trước khi dùng lại.
-- Đã profiling 9 bảng và marketplace files, bổ sung KPI/data contracts, 23 unit/reference tests và 3 fresh-process replay checks cho cả core spike lẫn direct Finance. [Bằng chứng thực thi](docs/verification/README.md) ghi rõ scope đã pass và phần còn thiếu.
+- Đã profiling 9 bảng và marketplace files, bổ sung KPI/data contracts, 45 unit/reference tests, 3 fresh-process replay checks cho core/direct và smoke test Airflow failure → recovery. [Bằng chứng thực thi](docs/verification/README.md) ghi rõ scope đã pass và phần còn thiếu.
 - Nghiệp vụ hiện hành v1.1 đã chốt: FIN02 net customer amount là KPI Finance chính cho direct; inventory chỉ current stock và actual snapshots từ go-live, chặn June backfill. [Biên bản BR31/BR32](docs/business/decisions/2026-11-11-finance-inventory.md).
 
 ## Tài liệu bắt đầu
@@ -29,6 +29,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 | Bộ số nghiệm thu | [Acceptance cases](docs/business/acceptance-cases.md) |
 | Core lakehouse spike | [Spike runbook](infra/platform/spike/README.md) |
 | Kết quả triển khai direct Finance | [Verification report + chart](docs/verification/README.md) |
+| Airflow + Prometheus/Grafana | [Setup và vận hành](infra/platform/airflow/README.md) |
 | Cách đóng góp | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## Cấu trúc thư mục
@@ -36,7 +37,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 ```text
 docs/                   Tài liệu nguồn, nghiệp vụ, kiến trúc, model và runbook
 infra/sources/          Compose cho nguồn dữ liệu được cung cấp
-infra/platform/         Chỗ dành cho platform Compose sau technical spike
+infra/platform/         Core lakehouse và Airflow/monitoring Compose
 infra/config/           Cấu hình service, không chứa secret
 dags/                   Airflow DAGs
 src/shopvn/             Python/PySpark modules
@@ -100,7 +101,7 @@ Kiểm tra này xác nhận cấu trúc, link và env/key riêng không bị tra
 
 ## Git và remote
 
-Nhánh chính: `main`. Dùng nhánh ngắn như `feat/source-profiling` và review trước khi merge. Người dùng đã kết nối remote GitHub cho repo; các bước chuẩn bị mới ở nhánh `feat/preimplementation-readiness`, chưa tự push hoặc merge. Với bản clone chưa có remote, cấu hình như sau:
+Nhánh chính: `main`. Dùng nhánh ngắn như `feat/source-profiling` và review trước khi merge. Người dùng đã push phần chuẩn bị; phần Airflow/monitoring nằm trên `feat/airflow-observability`, chưa tự push hoặc merge. Với bản clone chưa có remote, cấu hình như sau:
 
 ```powershell
 git remote add origin <REMOTE_URL>

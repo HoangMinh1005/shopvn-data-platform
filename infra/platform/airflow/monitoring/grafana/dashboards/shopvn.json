@@ -1,0 +1,25 @@
+{
+  "uid": "shopvn-operations",
+  "title": "ShopVN — Pipeline & Data Quality",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "time": {"from": "now-6h", "to": "now"},
+  "tags": ["shopvn", "finance", "operations"],
+  "panels": [
+    {"id":1,"type":"text","title":"Phạm vi","gridPos":{"x":0,"y":0,"w":24,"h":3},"options":{"mode":"markdown","content":"**Direct Finance / local deployment.** Nguồn mẫu chỉ có tháng 6/2026. Ngày xử lý khác ngày nghiệp vụ; không coi job xanh là có dữ liệu mới D−1. Spark là batch task, không phải service chạy liên tục. Cảnh báo hiển thị cục bộ, chưa gửi email/Slack."}},
+    {"id":2,"type":"stat","title":"Latest workflow SUCCESS","gridPos":{"x":0,"y":3,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_pipeline_state{state=\"success\"}","refId":"A"}],"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"1":{"text":"SUCCESS","color":"green"},"0":{"text":"RUNNING / FAILED","color":"orange"}}}]},"overrides":[]},"options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}}},
+    {"id":3,"type":"stat","title":"Last completion time","gridPos":{"x":6,"y":3,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_pipeline_last_finish_timestamp_seconds * 1000","refId":"A"}],"fieldConfig":{"defaults":{"unit":"dateTimeAsIso"},"overrides":[]}},
+    {"id":4,"type":"stat","title":"Requested business date","gridPos":{"x":12,"y":3,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_business_date_timestamp_seconds * 1000","refId":"A"}],"fieldConfig":{"defaults":{"unit":"dateTimeAsIso"},"overrides":[]}},
+    {"id":5,"type":"stat","title":"Source data through","gridPos":{"x":18,"y":3,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_source_end_date_timestamp_seconds * 1000","refId":"A"}],"fieldConfig":{"defaults":{"unit":"dateTimeAsIso"},"overrides":[]}},
+    {"id":6,"type":"timeseries","title":"Service health — 1 healthy / 0 unhealthy","gridPos":{"x":0,"y":7,"w":12,"h":7},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_service_up","legendFormat":"{{service}}","refId":"A"}],"fieldConfig":{"defaults":{"min":0,"max":1},"overrides":[]}},
+    {"id":7,"type":"timeseries","title":"FIN02 — requested business date, source vs candidate (VND)","gridPos":{"x":12,"y":7,"w":12,"h":7},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_fin02_amount_vnd","legendFormat":"{{layer}}","refId":"A"}],"fieldConfig":{"defaults":{"unit":"currencyVND"},"overrides":[]}},
+    {"id":8,"type":"stat","title":"Reconciliation delta — must be 0 VND","gridPos":{"x":0,"y":14,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_fin02_delta_vnd","refId":"A"}],"fieldConfig":{"defaults":{"unit":"currencyVND","decimals":2},"overrides":[]}},
+    {"id":9,"type":"stat","title":"DQ gate passed","gridPos":{"x":6,"y":14,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_pipeline_dq_passed","refId":"A"}],"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"1":{"text":"PASS","color":"green"},"0":{"text":"NOT PASSED","color":"red"}}}]},"overrides":[]},"options":{"colorMode":"background"}},
+    {"id":10,"type":"stat","title":"08:00 Vietnam deadline missed","gridPos":{"x":12,"y":14,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_daily_deadline_missed","refId":"A"}],"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"NO","color":"green"},"1":{"text":"MISSED","color":"red"}}}]},"overrides":[]}},
+    {"id":11,"type":"stat","title":"Latest workflow FAILED","gridPos":{"x":18,"y":14,"w":6,"h":4},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_pipeline_state{state=\"failed\"}","refId":"A"}],"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"NO","color":"green"},"1":{"text":"FAILED","color":"red"}}}]},"overrides":[]}},
+    {"id":12,"type":"timeseries","title":"Unresolved persisted alerts","gridPos":{"x":0,"y":18,"w":12,"h":6},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"shopvn_open_alerts","legendFormat":"{{kind}}","refId":"A"}]},
+    {"id":13,"type":"timeseries","title":"Prometheus firing alerts","gridPos":{"x":12,"y":18,"w":12,"h":6},"datasource":{"type":"prometheus","uid":"shopvn-prometheus"},"targets":[{"expr":"ALERTS{alertstate=\"firing\"}","legendFormat":"{{alertname}} {{service}}","refId":"A"}]}
+  ]
+}

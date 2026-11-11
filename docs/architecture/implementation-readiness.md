@@ -36,12 +36,13 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Restart catalog/MinIO/Trino giữ dữ liệu storage probe; chỉ dùng volumes của spike.
 - [x] Kiểm tra core Spark/Scala/JDBC/S3FileIO/JVM và ghi image/JAR identities.
 - [x] Ghi verified-lock cho core đã test và pin host preparation/chart dependencies.
-- [ ] Kiểm chứng Airflow Spark provider/submit, Kafka và Superset ở giai đoạn tiếp theo.
+- [x] Airflow LocalExecutor + Spark provider submit thực tế; candidate validation gate, retry, audit và local monitoring. Xem [runbook](../../infra/platform/airflow/README.md).
+- [ ] Kafka và Superset chưa triển khai/kiểm chứng runtime.
 
-Core spike và direct Finance đã pass, xem [bằng chứng thực thi](../verification/README.md). Airflow provider/Kafka/Superset vẫn cần kiểm chứng riêng; không gắn nhãn full MVP production-ready.
+Core spike, direct Finance và Airflow/monitoring đã có [bằng chứng thực thi](../verification/README.md). Kafka/Superset vẫn cần kiểm chứng riêng; không gắn nhãn full MVP production-ready.
 
 ## Luồng triển khai đầu tiên
 
-Đã triển khai direct orders + order_items + returns -> Bronze/Silver -> fact_order + fact_sales_line + fact_return -> DQ/source reconciliation -> mart FIN02 -> Trino -> biểu đồ. Bước tiếp theo: Airflow orchestration cho slice này, rồi marketplace/Logistics/inventory/Kafka theo phạm vi đã duyệt.
+Đã triển khai direct orders + order_items + returns -> Bronze/Silver -> fact_order + fact_sales_line + fact_return -> DQ/source reconciliation -> mart FIN02 -> Trino -> biểu đồ, được Airflow điều phối và Prometheus/Grafana giám sát. Bước tiếp theo: chuẩn bị nguồn giả lập cập nhật và chọn slice marketplace/Logistics/inventory/Kafka theo phạm vi đã duyệt; chưa tự triển khai các phần này.
 
 Definition of Done phải có cả kết quả đúng, khả năng chạy lại, lỗi nguồn được xử lý và visibility trên dashboard/log.

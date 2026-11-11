@@ -26,6 +26,8 @@ EXPORTS = {
 
 
 def load_env():
+    if not (ROOT / ".env").exists():
+        return  # Containers receive credentials through environment, never a mounted .env.
     for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
         if line.strip() and not line.lstrip().startswith("#") and "=" in line:
             name, value = line.split("=", 1)
@@ -88,6 +90,9 @@ def extract() -> Path:
             encoding="utf-8"
         )
         report["fin02_expected_by_day_channel"] = conn.execute(statement).fetchall()
+        report["source_order_date_range"] = conn.execute(
+            "SELECT MIN(order_date) AS min_date, MAX(order_date) AS max_date FROM orders"
+        ).fetchone()
     report["extraction_completed_at_utc"] = datetime.now(timezone.utc).isoformat()
     manifest = folder / "manifest.json"
     manifest.write_text(

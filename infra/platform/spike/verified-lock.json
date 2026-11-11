@@ -1,5 +1,5 @@
 {
-  "scope": "Verified core only; Airflow/Kafka/Superset runtime not yet validated",
+  "scope": "Verified core only; Airflow has a separate lock; Kafka/Superset runtime not yet validated",
   "images": {
     "spark": {
       "reference": "shopvn-readiness-spark:3.5.9-iceberg1.12.0",

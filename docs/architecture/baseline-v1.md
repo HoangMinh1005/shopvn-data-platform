@@ -1,6 +1,6 @@
 # Kiến trúc baseline v1
 
-Ngày ghi nhận: 2026-11-11. **Core Spark–Iceberg–MinIO–PostgreSQL JDBC Catalog–Trino đã được kiểm chứng**, xem [runtime evidence](../verification/README.md) và [core image/JAR lock](../../infra/platform/spike/verified-lock.json). Airflow/provider, Kafka và Superset trong bảng vẫn là baseline mục tiêu, chưa phải full-stack runtime certification.
+Ngày ghi nhận: 2026-11-11. **Core Spark–Iceberg–MinIO–PostgreSQL JDBC Catalog–Trino và Airflow/monitoring local đã được kiểm chứng**, xem [runtime evidence](../verification/README.md), [core image/JAR lock](../../infra/platform/spike/verified-lock.json) và [Airflow runbook](../../infra/platform/airflow/README.md). Kafka và Superset trong bảng vẫn là baseline mục tiêu, chưa phải full-stack runtime certification.
 
 Kết quả chuẩn bị và giới hạn thực tế: [preimplementation status](preimplementation-status.md). Generic Spark image khác runtime mục tiêu nên đã build image riêng Python3.11.15/Java17.0.21; MinIO dùng source-build pinned commit cho demo. Core đã chạy được từ cấu hình repo; không tự suy tương thích của các thành phần chưa test.
 
@@ -37,11 +37,12 @@ PostgreSQL platform: Iceberg JDBC catalog + Airflow/Superset metadata
 | Catalog | Iceberg JDBC Catalog trên PostgreSQL 16 |
 | Broker | Apache Kafka 4.3.2 KRaft, một node cho MVP |
 | Orchestrator | Airflow 3.4.0 LocalExecutor |
-| Spark provider | Candidate 6.3.4; kiểm chứng dependency với Spark 3.5 trước khi khóa |
+| Spark provider | 6.3.4; submit thực tế với Spark 3.5.9, Airflow virtualenv tách Spark Python |
 | Query engine | Trino 484; sử dụng JVM đi kèm image Trino, không áp Java 17 của Spark cho Trino |
 | BI | Superset 6.0.0, PostgreSQL metadata; cấu hình tối thiểu cho demo |
 | Deployment | Docker Compose, Linux containers trên WSL2 |
 | DQ | PySpark/SQL checks + audit tables |
+| Monitoring local | Prometheus 3.16.0, Grafana 13.3.1, Python operational exporter |
 | Development | pytest, Ruff, SQLFluff, GitHub Actions; dependency khóa sau spike |
 
 Airflow, Spark và Superset dùng các image/môi trường riêng. Provider Spark mới có dependency client khác Spark engine; technical spike phải kiểm tra chính xác thay vì cài toàn bộ package mới nhất chung môi trường.

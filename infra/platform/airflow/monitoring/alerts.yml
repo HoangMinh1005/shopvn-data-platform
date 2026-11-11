@@ -1,0 +1,34 @@
+groups:
+  - name: shopvn
+    rules:
+      - alert: ShopVNServiceDown
+        expr: shopvn_service_up == 0
+        for: 20s
+        labels: {severity: critical}
+        annotations: {summary: 'Service {{ $labels.service }} is unhealthy'}
+      - alert: ShopVNPipelineFailed
+        expr: shopvn_pipeline_state{state="failed"} == 1
+        for: 10s
+        labels: {severity: critical}
+        annotations: {summary: 'Latest direct Finance workflow failed; inspect Airflow logs'}
+      - alert: ShopVNDailyDeadlineMissed
+        expr: shopvn_daily_deadline_missed == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Scheduled publication missed 08:00 Asia/Ho_Chi_Minh'}
+      - alert: ShopVNReconciliationMismatch
+        expr: shopvn_fin02_delta_vnd != 0
+        labels: {severity: critical}
+        annotations: {summary: 'FIN02 candidate differs from source; publication must remain blocked'}
+      - alert: ShopVNExporterUnavailable
+        expr: up{job="shopvn-pipeline"} == 0
+        for: 20s
+        labels: {severity: critical}
+        annotations: {summary: 'Operational exporter is unavailable'}
+      - alert: ShopVNMonitorStale
+        expr: time() - shopvn_monitor_last_poll_timestamp_seconds > 60
+        labels: {severity: critical}
+        annotations: {summary: 'Exporter responds but operational polling is stale'}
+      - alert: ShopVNDQGateFailed
+        expr: shopvn_pipeline_dq_passed == 0 and on() shopvn_pipeline_state{state="failed"} == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Failed workflow has not passed its DQ gate'}

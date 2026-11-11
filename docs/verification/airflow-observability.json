@@ -1,0 +1,157 @@
+{
+  "started_at_utc": "2026-11-11T15:18:13.984222+00:00",
+  "status": "passed",
+  "business_date": "2026-06-30",
+  "scope": "actual LocalExecutor/Spark/Trino; local Prometheus/Grafana; no Kafka, Superset or outbound notifications",
+  "blocked": {
+    "dag_run_id": "manual__verify_blocked_20261111T151814854429",
+    "state": "failed",
+    "tasks": [
+      [
+        "initialize",
+        "success",
+        1
+      ],
+      [
+        "extract_snapshot",
+        "success",
+        1
+      ],
+      [
+        "transform_candidate",
+        "success",
+        1
+      ],
+      [
+        "publish_finance",
+        "upstream_failed",
+        0
+      ],
+      [
+        "verify_and_finish",
+        "upstream_failed",
+        0
+      ],
+      [
+        "finalize",
+        "failed",
+        1
+      ],
+      [
+        "validate_candidate",
+        "failed",
+        3
+      ]
+    ]
+  },
+  "publication_unchanged_on_failure": {
+    "before_snapshot_id": 8249857039457435904,
+    "after_snapshot_id": 8249857039457435904
+  },
+  "firing_failure_alerts": [
+    {
+      "metric": {
+        "__name__": "ALERTS",
+        "alertname": "ShopVNPipelineFailed",
+        "alertstate": "firing",
+        "instance": "pipeline-monitor:9108",
+        "job": "shopvn-pipeline",
+        "severity": "critical",
+        "state": "failed"
+      },
+      "value": [
+        1794410481.842,
+        "1"
+      ]
+    }
+  ],
+  "recovery": {
+    "dag_run_id": "manual__verify_recovery_20261111T152121866608",
+    "state": "success",
+    "tasks": [
+      [
+        "initialize",
+        "success",
+        1
+      ],
+      [
+        "extract_snapshot",
+        "success",
+        1
+      ],
+      [
+        "transform_candidate",
+        "success",
+        1
+      ],
+      [
+        "publish_finance",
+        "success",
+        1
+      ],
+      [
+        "verify_and_finish",
+        "success",
+        1
+      ],
+      [
+        "finalize",
+        "success",
+        1
+      ],
+      [
+        "validate_candidate",
+        "success",
+        2
+      ]
+    ]
+  },
+  "monitor_status": {
+    "services": {
+      "minio": true,
+      "trino": true,
+      "airflow_api": true,
+      "airflow_scheduler": true,
+      "airflow_dag_processor": true,
+      "airflow_metadatabase": true,
+      "source_postgres": true,
+      "platform_postgres": true
+    },
+    "latest_run": {
+      "run_key": "13cc0a6bbe1a5cd5b2fc84cb",
+      "dag_id": "shopvn_direct_finance",
+      "dag_run_id": "manual__verify_recovery_20261111T152121866608",
+      "run_type": "manual",
+      "business_date": "2026-06-30",
+      "status": "success",
+      "stage": "complete",
+      "started_at": "2026-11-11 15:21:24.705876+00:00",
+      "finished_at": "2026-11-11 15:23:09.162534+00:00",
+      "snapshot_id": "fbbf50f048a5410c9d514b9694093e72",
+      "candidate_snapshot_id": 5457574308151328636,
+      "source_amount": "49737232800.00",
+      "candidate_amount": "49737232800.00",
+      "amount_delta": "0.00",
+      "dq_passed": true,
+      "source_min_date": "2026-06-01",
+      "source_max_date": "2026-06-30",
+      "published": true,
+      "error_class": null,
+      "attempts": 2,
+      "rule_version": "1.1"
+    },
+    "open_alerts": [],
+    "last_poll": "2026-11-11T15:23:11.530844+00:00"
+  },
+  "certified_snapshot_id": 677444625386042098,
+  "fin02_total_vnd": "1648602104364.00",
+  "grafana": {
+    "title": "ShopVN \u2014 Pipeline & Data Quality",
+    "panels": 13,
+    "provisioned": true,
+    "prometheus_proxy_query": "passed; 8 observed service/component metrics healthy"
+  },
+  "deadline_verification": "08:00 policy covered by fixed-clock unit tests; native 30-minute expiry not awaited in this smoke test",
+  "finished_at_utc": "2026-11-11T15:23:25.348044+00:00",
+  "spark_engine_observed_in_task_log": "3.5.9"
+}

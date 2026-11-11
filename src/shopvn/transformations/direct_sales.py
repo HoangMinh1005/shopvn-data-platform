@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -153,13 +154,25 @@ def merge_fact(spark, df, table: str, key: str, observed_at: str, run_id: str):
                   WHEN NOT MATCHED THEN INSERT *""")
 
 
-def run(snapshot_id: str):
+def run(
+    snapshot_id: str,
+    *,
+    candidate_name: str | None = None,
+    result_path: str | None = None,
+    publication_id: str | None = None,
+):
     root = Path("/workspace/runtime/direct")
     manifest = json.loads((root / "landing" / snapshot_id / "manifest.json").read_text())
     if set(manifest["tables"]) != set(SCHEMAS):
         raise ValueError("Extract a new snapshot with all six source tables")
     observed_at = manifest["observed_at_utc"]
-    run_id = uuid.uuid4().hex
+    run_id = publication_id or uuid.uuid4().hex
+    if candidate_name and not re.fullmatch(r"mart_fin02_[a-f0-9]{24}", candidate_name):
+        raise ValueError("Invalid isolated candidate table name")
+    result_file = Path(result_path) if result_path else root / "direct-result.json"
+    if not result_file.resolve().is_relative_to(Path("/workspace/runtime").resolve()):
+        raise ValueError("Result path must stay inside runtime")
+    result_file.parent.mkdir(parents=True, exist_ok=True)
     stage = root / "stage" / run_id
     spark = session("shopvn-direct-finance")
     writer_lock = None
@@ -171,7 +184,7 @@ def run(snapshot_id: str):
     }
     try:
         writer_lock = acquire_writer_lock(spark)
-        for namespace in ("bronze", "silver", "gold", "analytics"):
+        for namespace in ("bronze", "silver", "gold", "analytics", "staging"):
             spark.sql(f"CREATE NAMESPACE IF NOT EXISTS shopvn.{namespace}")
         raw = {}
         for name, schema in SCHEMAS.items():
@@ -539,13 +552,21 @@ def run(snapshot_id: str):
             raise ValueError(
                 "FIN02 source-to-Gold reconciliation failed; certified mart not replaced"
             )
+        target = (
+            f"shopvn.staging.{candidate_name}"
+            if candidate_name else "shopvn.analytics.mart_fin02_daily"
+        )
         replace_table(
             spark,
-            mart.withColumn("rule_version", F.lit("1.1")).withColumn(
-                "publication_id", F.lit(run_id)
-            ),
-            "shopvn.analytics.mart_fin02_daily",
+            mart.withColumn("rule_version", F.lit("1.1"))
+            .withColumn("data_as_of", F.to_timestamp(F.lit(observed_at)))
+            .withColumn("publication_id", F.lit(run_id)),
+            target,
             stage,
+        )
+        candidate_snapshot = (
+            spark.table(target + ".snapshots")
+            .orderBy(F.col("committed_at").desc()).first()["snapshot_id"]
         )
         report.update(
             status="passed",
@@ -558,13 +579,16 @@ def run(snapshot_id: str):
                 F.col("discount_amount") > F.col("subtotal")
             ).count(),
             zero_quantity_lines=lines.filter("quantity=0").count(),
+            target_table=target,
+            candidate_snapshot_id=candidate_snapshot,
+            published=candidate_name is None,
         )
         print("DIRECT_RESULT=" + json.dumps(report), flush=True)
     except Exception as exc:
         report.update(status="failed", failure=type(exc).__name__ + ": " + str(exc)[:1000])
         raise
     finally:
-        (root / "direct-result.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+        result_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
         if writer_lock is not None:
             writer_lock.close()
         spark.stop()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import http.client
 import json
+import os
 import subprocess
 import time
 import urllib.error
@@ -38,7 +39,7 @@ def wait_http(url: str, timeout: int = 180):
 
 
 def trino_query(statement: str) -> list:
-    request = urllib.request.Request("http://127.0.0.1:18080/v1/statement",
+    request = urllib.request.Request(os.getenv("TRINO_URL", "http://127.0.0.1:18080").rstrip("/") + "/v1/statement",
         data=statement.encode(), headers={"X-Trino-User": "readiness", "Content-Type": "text/plain"})
     result = []
     deadline = time.monotonic() + 180

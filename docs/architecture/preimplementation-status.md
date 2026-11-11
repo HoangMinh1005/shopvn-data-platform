@@ -2,7 +2,7 @@
 
 Ngày thực hiện: 2026-11-11. Thực hiện trên repo đã đổi tên `shopvn-data-platform`, nhánh `feat/preimplementation-readiness`. Đây là báo cáo kiểm tra thực tế, không phải xác nhận platform đã chạy end-to-end.
 
-**Cập nhật mới nhất:** core storage spike và direct Finance slice đã PASS sau khi khôi phục kết nối mạng. Xem [bằng chứng thực thi](../verification/README.md) và [verified-lock](../../infra/platform/spike/verified-lock.json). Những lỗi tải ở phần lịch sử bên dưới đã được vượt qua, không còn là blocker hiện tại. Full MVP Airflow/Kafka/Superset chưa hoàn thành.
+**Cập nhật mới nhất:** core storage spike, direct Finance và Airflow/monitoring local đã PASS. Xem [bằng chứng thực thi](../verification/README.md), [core verified-lock](../../infra/platform/spike/verified-lock.json), [Airflow runbook](../../infra/platform/airflow/README.md). Những lỗi tải ở phần lịch sử bên dưới đã được vượt qua, không còn là blocker hiện tại. Kafka/Superset và full MVP chưa hoàn thành. Bảng/lịch sử bên dưới ghi nhận giai đoạn chuẩn bị ban đầu.
 
 | Hạng mục | Kết quả | Gate |
 |---|---|---|
