@@ -22,7 +22,7 @@ def allocate_discount(lines: list[dict], discount: int | Decimal) -> dict[str, i
     # Integer VND allocation, stable ties; preserve any source fractional tail on rank 1.
     base = {row["id"]: discount * row["total_price"] // total for row in valid}
     ranking = sorted(valid, key=lambda row: (-(discount * row["total_price"] % total), row["id"]))
-    for row in ranking[:int(discount - sum(base.values()))]:
+    for row in ranking[: int(discount - sum(base.values()))]:
         base[row["id"]] += 1
     fractional_tail = discount - sum(base.values())
     if fractional_tail:
@@ -39,9 +39,13 @@ def direct_summary(orders: list[dict], lines: list[dict], returns: list[dict]) -
         seen_returns.add(row["id"])
         if row["status"] == "refunded":
             refunds[row["order"]] += row["amount"]
-    eligible = [row for row in orders if row["status"] in {"delivered", "returned"}
-                and row["payment"] in {"paid", "refunded"}
-                and 0 <= row["discount"] <= row["subtotal"]]
+    eligible = [
+        row
+        for row in orders
+        if row["status"] in {"delivered", "returned"}
+        and row["payment"] in {"paid", "refunded"}
+        and 0 <= row["discount"] <= row["subtotal"]
+    ]
     eligible_ids = {row["id"] for row in eligible}
     valid_lines = [row for row in lines if row["order"] in eligible_ids and row["quantity"] > 0]
     merchandise = sum(row["subtotal"] - row["discount"] for row in eligible)
@@ -52,7 +56,9 @@ def direct_summary(orders: list[dict], lines: list[dict], returns: list[dict]) -
         "merchandise_before_refund": merchandise,
         "refunded": refunded,
         "adjusted_merchandise": merchandise - refunded,
-        "customer_total_after_refund": merchandise + sum(row["shipping"] for row in eligible) - refunded,
+        "customer_total_after_refund": merchandise
+        + sum(row["shipping"] for row in eligible)
+        - refunded,
         "units_sold": sum(row["quantity"] for row in valid_lines),
         "valid_sales_lines": len(valid_lines),
         "invalid_discount_orders": sum(row["discount"] > row["subtotal"] for row in orders),
@@ -62,30 +68,41 @@ def direct_summary(orders: list[dict], lines: list[dict], returns: list[dict]) -
 def marketplace_summary(rows: list[dict]) -> dict:
     merchandise = net = units = 0
     for row in rows:
-        expected = (Decimal(row["sale_price"]) * row["quantity"] *
-                    (1 - Decimal(row["commission_rate"]))).to_integral_value(rounding=ROUND_FLOOR)
+        expected = (
+            Decimal(row["sale_price"]) * row["quantity"] * (1 - Decimal(row["commission_rate"]))
+        ).to_integral_value(rounding=ROUND_FLOOR)
         if expected != row["net_revenue"]:
             raise ValueError("Marketplace source amount mismatch")
         if row["status"] == "completed":
             merchandise += row["sale_price"] * row["quantity"]
             net += row["net_revenue"]
             units += row["quantity"]
-    return {"marketplace_merchandise": merchandise, "marketplace_reported_net": net,
-            "marketplace_units": units}
+    return {
+        "marketplace_merchandise": merchandise,
+        "marketplace_reported_net": net,
+        "marketplace_units": units,
+    }
 
 
 def delivery_summary(rows: list[dict]) -> dict:
     terminal = [row for row in rows if row["status"] in {"delivered", "failed", "returned"}]
     delivered = [row for row in rows if row["status"] == "delivered"]
-    durations = [(datetime.fromisoformat(row["delivered_at"]) -
-                  datetime.fromisoformat(row["shipped_at"])).total_seconds() / 3600
-                 for row in delivered]
+    durations = [
+        (
+            datetime.fromisoformat(row["delivered_at"]) - datetime.fromisoformat(row["shipped_at"])
+        ).total_seconds()
+        / 3600
+        for row in delivered
+    ]
     if any(duration < 0 for duration in durations):
         raise ValueError("Negative delivery duration")
-    return {"delivered": len(delivered), "terminal_shipments": len(terminal),
-            "delivery_success_rate": str(Decimal(len(delivered)) / len(terminal)) if terminal else None,
-            "average_delivery_hours": str(sum(durations) / len(durations)) if durations else None,
-            "late_deliveries": sum(row["delivered_at"][:10] > row["eta"] for row in delivered)}
+    return {
+        "delivered": len(delivered),
+        "terminal_shipments": len(terminal),
+        "delivery_success_rate": str(Decimal(len(delivered)) / len(terminal)) if terminal else None,
+        "average_delivery_hours": str(sum(durations) / len(durations)) if durations else None,
+        "late_deliveries": sum(row["delivered_at"][:10] > row["eta"] for row in delivered),
+    }
 
 
 def deduplicate_events(events: list[dict]) -> list[dict]:

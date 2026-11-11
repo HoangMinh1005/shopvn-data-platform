@@ -20,18 +20,13 @@ import psycopg
 from psycopg import sql
 from psycopg.rows import dict_row
 
+from shopvn.common.environment import load_env
+
 ROOT = Path(__file__).resolve().parents[1]
 TABLES = (
     "customers", "products", "orders", "order_items", "vouchers", "inventory",
     "inventory_transactions", "returns", "product_reviews",
 )
-
-
-def load_env() -> None:
-    for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
-        if line.strip() and not line.lstrip().startswith("#") and "=" in line:
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
 
 
 def profile_postgres() -> tuple[dict, list[str]]:

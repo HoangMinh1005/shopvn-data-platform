@@ -1,6 +1,7 @@
 """Local persisted alert callbacks; intentionally no email/Slack sends."""
 
 from shopvn.orchestration import ops
+from shopvn.orchestration.deadline import runtime_deadline_missed
 
 
 def _identity(context):
@@ -51,4 +52,12 @@ def deadline_exceeded(**kwargs):
     context = kwargs.get("context", {})
     key, day = _identity(context)
     if key:
+        deadline_time = (context.get("deadline") or {}).get("deadline_time")
+        if deadline_time:
+            with ops.connection() as conn:
+                row = conn.execute(
+                    "SELECT finished_at FROM ops.pipeline_run WHERE run_key=%s", (key,)
+                ).fetchone()
+            if row and not runtime_deadline_missed(row["finished_at"], deadline_time):
+                return
         ops.alert(key, day, "deadline_runtime", "DAG exceeded the 30-minute runtime deadline")

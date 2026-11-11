@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from shopvn.orchestration.deadline import deadline_missed
+from shopvn.orchestration.deadline import deadline_missed, runtime_deadline_missed
 
 VN = ZoneInfo("Asia/Ho_Chi_Minh")
 ENABLED = date(2026, 11, 12)
@@ -33,3 +33,19 @@ def test_daily_wall_clock_deadline(now, finished, expected):
 
 def test_deadline_resets_each_vietnamese_day():
     assert not deadline_missed(datetime(2026, 11, 13, 0, 1, tzinfo=VN), ENABLED, None)
+
+
+@pytest.mark.parametrize(
+    "finished,expected",
+    [
+        (None, True),
+        ("2026-11-12T03:05:00+07:00", False),
+        ("2026-11-12T03:30:00+07:00", False),
+        ("2026-11-12T03:30:01+07:00", True),
+    ],
+)
+def test_runtime_callback_ignores_runs_terminated_before_deadline(finished, expected):
+    assert (
+        runtime_deadline_missed(stamp(finished) if finished else None, "2026-11-12T03:30:00+07:00")
+        is expected
+    )

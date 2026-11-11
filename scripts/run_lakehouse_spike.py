@@ -5,13 +5,14 @@ from __future__ import annotations
 import argparse
 import http.client
 import json
-import os
 import subprocess
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+from shopvn.clients.trino import trino_query
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSE = ["docker", "compose", "--project-name", "shopvn-readiness", "--env-file", str(ROOT / ".env"),
@@ -36,25 +37,6 @@ def wait_http(url: str, timeout: int = 180):
             pass
         time.sleep(2)
     raise TimeoutError(f"Service not ready: {url}")
-
-
-def trino_query(statement: str) -> list:
-    request = urllib.request.Request(os.getenv("TRINO_URL", "http://127.0.0.1:18080").rstrip("/") + "/v1/statement",
-        data=statement.encode(), headers={"X-Trino-User": "readiness", "Content-Type": "text/plain"})
-    result = []
-    deadline = time.monotonic() + 180
-    while True:
-        if time.monotonic() > deadline:
-            raise TimeoutError("Trino query timeout")
-        with urllib.request.urlopen(request, timeout=30) as response:
-            payload = json.load(response)
-        if "error" in payload:
-            raise RuntimeError(payload["error"]["message"])
-        result.extend(payload.get("data", []))
-        if "nextUri" not in payload:
-            return result
-        request = urllib.request.Request(payload["nextUri"], headers={"X-Trino-User": "readiness"})
-        time.sleep(0.2)
 
 
 def main():

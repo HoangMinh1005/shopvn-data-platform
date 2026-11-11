@@ -4,5 +4,5 @@ RUN python -m venv /opt/airflow-venv && /opt/airflow-venv/bin/pip install --no-c
     'apache-airflow[postgres]==3.4.0' 'apache-airflow-providers-apache-spark==6.3.4' \
     'psycopg[binary]' prometheus-client --constraint /opt/airflow-constraints.txt
 ENV PATH=/opt/airflow-venv/bin:/opt/spark/bin:/usr/local/bin:/usr/bin:/bin \
-    AIRFLOW_HOME=/opt/airflow PYTHONPATH=/workspace/src:/workspace/scripts:/opt/airflow/plugins
+    AIRFLOW_HOME=/opt/airflow PYTHONPATH=/workspace/src:/opt/airflow/plugins
 WORKDIR /workspace

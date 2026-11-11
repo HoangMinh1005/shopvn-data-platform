@@ -2,6 +2,8 @@
 
 Ngày thực hiện: 2026-11-11. Core storage spike, direct Finance và Airflow/monitoring đều đã chạy thực tế, không chỉ validate Compose. [Storage evidence](storage-spike.json), [direct evidence](direct-finance.json), [Airflow evidence](airflow-observability.json), [core image/JAR lock](../../infra/platform/spike/verified-lock.json), [ops lock](../../infra/platform/airflow/verified-lock.json).
 
+Cập nhật sau refactor: [refactor evidence](refactor.json) và [bản đồ code](../architecture/code-structure.md). Các kết quả Airflow hiện đã được chạy lại với package/tầng xử lý mới.
+
 ## Storage spike — PASS
 
 - Spark 3.5.9 / Scala 2.12.18 / Python 3.11.15 / Java 17.0.21.
@@ -51,11 +53,22 @@ Biểu đồ được render từ kết quả query Trino đã đối soát, kh�
 - Run cố ý DQ fail đã retry hết rồi fail; publish/verify upstream_failed, finalizer fail. Iceberg snapshot certified mart trước/sau không đổi; Prometheus đã có alert firing.
 - Run phục hồi với DQ fail lần đầu đã tự retry lần hai rồi success; publish, post-check và finalizer success. FIN02 requested day 30/06 là 49737232800.00 VND, delta 0.00; toàn kỳ vẫn 1648602104364.00 VND. Alert cũ được resolve, không xóa lịch sử failed run.
 - Grafana dashboard 13 panels được provision; kết nối datasource được kiểm tra qua Grafana proxy tới Prometheus. 8 service/component health metrics được thu thập. 7 alert rules qua promtool validation.
-- Tổng 45 unit/reference tests, gồm deadline 08:00 với UTC/VN/boundary, source coverage guard, identity callback Airflow, enum run_type và finalizer không che upstream failure/không đọc nhầm retry history.
+- Tổng hiện tại 59 unit/reference tests, gồm deadline 08:00/runtime callback, source coverage guard, identity callback Airflow, enum run_type, finalizer không che upstream failure/không đọc nhầm retry history, schema contract và package boundaries.
 
 Nguồn chỉ tháng 6/2026; job success tháng 6 **không** là bằng chứng daily freshness tháng 11. Dashboard hiển thị riêng requested day/source coverage/processing time. Chính sách 08:00 chỉ chấp nhận scheduled success cho ngày D−1 hiện hành, manual demo không thay thế. Chưa có Alertmanager/email/Slack delivery, Kafka/Superset, HA/load test, full restore test hoặc multi-table atomic Gold publication. Chưa tự động retention cho candidate/landing/snapshots.
 
 Setup/replay: [Airflow runbook](../../infra/platform/airflow/README.md); xử lý fail/rerun/deadline: [incident runbook](../runbooks/direct-finance-airflow.md). Cảnh báo hiển thị local, không hứa gửi thông báo ra ngoài.
+
+## Refactor application — PASS
+
+- Tách Bronze/Silver/Gold, marts, ingestion, jobs, pipeline, quality, Trino client và exporter. Không đổi catalog/table/bucket/volume names, HMAC identity hay công thức Finance.
+- 59 unit/reference tests, không skip; thêm 4 Spark integration tests chạy các hàm application thật trên fixture tổng hợp.
+- Replay snapshot đã lưu qua toàn bộ các tầng: fact counts và FIN02 không đổi, Trino đối soát 60 rows, certified mart snapshot trước/sau replay không đổi. Đây là bài test candidate-only, không phải fresh extraction.
+- Sau khi PostgreSQL nguồn được bật lại theo xác nhận người dùng, actual Airflow smoke test được chạy lại từ fresh extraction. DQ failure injection fail đúng validation sau khi extract/transform success; publish bị chặn. Recovery validate ở attempt 2, các task khác attempt 1, DAG success và alert được resolve.
+- Wheel có SQL resource và không chứa monolith đã bỏ; cài vào virtualenv độc lập, import bằng Python -I không cần Spark/Airflow cho job CLI. Hash wheel/SQL được ghi trong evidence.
+- Container runtime đã bỏ scripts khỏi PYTHONPATH; application không import helper từ deployment/verification scripts. Runtime image lock được cập nhật sau rebuild/restart.
+
+Giới hạn chức năng vẫn giữ: full-snapshot extraction, dimensions pre-go-live cohort, chưa có complete SCD2/as-of, Kafka/Superset, immutable production application image hoặc load/HA/restore certification. Local source mount vẫn dùng cho phát triển; packaging proof không đồng nghĩa production deployment đã hoàn tất.
 
 ## Các lỗi thật đã xử lý
 
@@ -65,6 +78,7 @@ Setup/replay: [Airflow runbook](../../infra/platform/airflow/README.md); xử l�
 4. Có 403 order source discount lẻ phần VND. Vẫn phân bổ integer VND theo rank ổn định, phần dư dưới 1 VND được cộng vào rank 1 để giữ đúng precision nguồn DECIMAL(20,2). Không truncate source amount hoặc thay FIN02. Có thêm 3 regression cases; tổng hiện 23 unit/reference tests pass.
 5. Airflow dùng virtualenv có psycopg nhưng Spark Python gốc không có: tách run artifact helpers thành module chỉ dùng standard library để publisher không kéo theo dependency orchestration.
 6. Airflow 3.4 giữ archived retry attempts trong task_instance: finalizer chỉ xét working_set=true. Không được coi retry lịch sử là trạng thái hiện tại; đồng thời vẫn phải fail nếu task hiện hành upstream fail.
+7. Deadline callback có thể đến sau khi một run đã fail/kết thúc sớm. Callback runtime giờ đối chiếu finished_at với deadline_time để không gán nhầm run ngắn thành chạy quá 30 phút; có regression tests cho trước/đúng/sau hạn và run chưa kết thúc.
 
 ## Chạy lại trên máy hiện tại
 
@@ -75,6 +89,8 @@ Setup/replay: [Airflow runbook](../../infra/platform/airflow/README.md); xử l�
 .venv/Scripts/python.exe scripts/export_verification.py
 .venv/Scripts/python.exe scripts/verify_airflow.py --business-date 2026-06-30
 .venv/Scripts/python.exe scripts/export_airflow_verification.py
+.venv/Scripts/python.exe tests/integration/verify_direct_replay.py
+.venv/Scripts/python.exe scripts/export_refactor_verification.py
 ```
 
 Direct runner mặc định extract snapshot mới. Muốn replay snapshot cũ, thêm --snapshot-id với ID trong runtime/direct/latest-snapshot.json; không sửa CSV/manifest để tạo số khớp. Nếu gặp mismatch, mart không được publish, xem runtime/direct/direct-result.json và direct-slice-report.json.

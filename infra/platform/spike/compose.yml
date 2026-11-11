@@ -58,6 +58,7 @@ services:
     volumes:
       - ../../../scripts:/workspace/scripts:ro
       - ../../../src:/workspace/src:ro
+      - ../../../tests:/workspace/tests:ro
       - ../../../runtime:/workspace/runtime
     entrypoint: [/opt/spark/bin/spark-submit]
     command: [--master, 'local[2]', --driver-memory, 1g, /workspace/scripts/spike_spark.py]

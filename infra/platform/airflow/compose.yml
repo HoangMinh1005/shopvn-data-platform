@@ -40,7 +40,7 @@ x-airflow: &airflow
     SPARK_LOCAL_IP: 127.0.0.1
     PYSPARK_PYTHON: /usr/local/bin/python
     PYSPARK_DRIVER_PYTHON: /usr/local/bin/python
-    PYTHONPATH: /workspace/src:/workspace/scripts:/opt/airflow/plugins
+    PYTHONPATH: /workspace/src:/opt/airflow/plugins
   volumes:
     - ../../../dags:/workspace/dags:ro
     - ../../../src:/workspace/src:ro

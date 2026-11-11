@@ -1,0 +1,150 @@
+{
+  "status": "passed",
+  "verified_at_utc": "2026-11-11T16:02:05.937076+00:00",
+  "scope": "Refactor only: no table/catalog/volume renaming; current full-snapshot and pre-go-live limits retained",
+  "unit_tests": {
+    "tests": 59,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "spark_layer_tests": {
+    "status": "passed",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  "saved_snapshot_replay": {
+    "status": "passed",
+    "started_at_utc": "2026-11-11T15:52:03.036350+00:00",
+    "snapshot_id": "fbbf50f048a5410c9d514b9694093e72",
+    "run_key": "b02bc363abdd8c3885bde8e7",
+    "source": "saved immutable read-only source snapshot; no new live extraction",
+    "spark": {
+      "snapshot_id": "fbbf50f048a5410c9d514b9694093e72",
+      "run_id": "b02bc363abdd8c3885bde8e7",
+      "rule_version": "1.1",
+      "status": "passed",
+      "fin02_total": "1648602104364.00",
+      "eligible_orders": 110911,
+      "mart_rows": 60,
+      "fact_counts": {
+        "fact_order": 211806,
+        "fact_sales_line": 444142,
+        "fact_return": 4215
+      },
+      "source_counts": {
+        "orders": 211806,
+        "order_items": 444142,
+        "returns": 4215,
+        "customers": 50000,
+        "products": 2000,
+        "vouchers": 200
+      },
+      "excluded_discount_orders": 622,
+      "zero_quantity_lines": 4420,
+      "target_table": "shopvn.staging.mart_fin02_b02bc363abdd8c3885bde8e7",
+      "candidate_snapshot_id": 7051773780286262556,
+      "published": false
+    },
+    "trino_rows": 60,
+    "fin02_total_vnd": "1648602104364.00",
+    "certified_before": 677444625386042098,
+    "certified_after": 677444625386042098,
+    "finished_at_utc": "2026-11-11T15:53:08.986517+00:00"
+  },
+  "airflow": {
+    "status": "passed",
+    "blocked": {
+      "dag_run_id": "manual__verify_blocked_20261111T155330157534",
+      "state": "failed",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "extract_snapshot",
+          "success",
+          1
+        ],
+        [
+          "transform_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "upstream_failed",
+          0
+        ],
+        [
+          "verify_and_finish",
+          "upstream_failed",
+          0
+        ],
+        [
+          "finalize",
+          "failed",
+          1
+        ],
+        [
+          "validate_candidate",
+          "failed",
+          3
+        ]
+      ]
+    },
+    "recovery": {
+      "dag_run_id": "manual__verify_recovery_20261111T155658490025",
+      "state": "success",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "extract_snapshot",
+          "success",
+          1
+        ],
+        [
+          "transform_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "success",
+          1
+        ],
+        [
+          "verify_and_finish",
+          "success",
+          1
+        ],
+        [
+          "finalize",
+          "success",
+          1
+        ],
+        [
+          "validate_candidate",
+          "success",
+          2
+        ]
+      ]
+    },
+    "fin02_total_vnd": "1648602104364.00"
+  },
+  "wheel": {
+    "filename": "shopvn_data_platform-0.1.0-py3-none-any.whl",
+    "sha256": "ee5701288621d9ff58c1127a892afc836482ccff0373a3c1aa6976de808bdb26",
+    "isolated_install": "passed",
+    "packaged_sql_sha256": "165ed57513c5bd96f816d1a162e2f9d17b9c7f205fd9df619f12ba9ac9b6e306",
+    "job_import_without_spark": true
+  },
+  "cleanup": "Removed obsolete monolith, duplicate source definitions/runtime imports, placeholder files and legacy-only ERD generator; no runtime/data/secret/volume deletion"
+}

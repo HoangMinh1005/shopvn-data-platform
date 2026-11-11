@@ -13,22 +13,22 @@
   "images": {
     "airflow-api": {
       "reference": "shopvn-airflow:3.4.0-spark3.5.9",
-      "image_id": "sha256:dd887969f218bf3dcfab8eba1434bd2bcb21a610cc3936457053adcff78e1aac",
+      "image_id": "sha256:5eb276b52178318a044a1f9884d0e65a818ff68570abffa955111bcb50052de5",
       "oom_killed": false
     },
     "airflow-scheduler": {
       "reference": "shopvn-airflow:3.4.0-spark3.5.9",
-      "image_id": "sha256:dd887969f218bf3dcfab8eba1434bd2bcb21a610cc3936457053adcff78e1aac",
+      "image_id": "sha256:5eb276b52178318a044a1f9884d0e65a818ff68570abffa955111bcb50052de5",
       "oom_killed": false
     },
     "airflow-dag-processor": {
       "reference": "shopvn-airflow:3.4.0-spark3.5.9",
-      "image_id": "sha256:dd887969f218bf3dcfab8eba1434bd2bcb21a610cc3936457053adcff78e1aac",
+      "image_id": "sha256:5eb276b52178318a044a1f9884d0e65a818ff68570abffa955111bcb50052de5",
       "oom_killed": false
     },
     "pipeline-monitor": {
       "reference": "shopvn-airflow:3.4.0-spark3.5.9",
-      "image_id": "sha256:dd887969f218bf3dcfab8eba1434bd2bcb21a610cc3936457053adcff78e1aac",
+      "image_id": "sha256:5eb276b52178318a044a1f9884d0e65a818ff68570abffa955111bcb50052de5",
       "oom_killed": false
     },
     "prometheus": {

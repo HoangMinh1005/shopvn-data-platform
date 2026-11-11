@@ -9,6 +9,8 @@ Thứ tự áp dụng khi có khác biệt:
 
 Nếu quyết định nghiệp vụ đụng giới hạn dữ liệu hoặc yêu cầu đề bài, ghi ngoại lệ và báo cáo giới hạn; không sửa dữ liệu để tạo cảm giác đã đáp ứng.
 
+Bản đồ implementation sau refactor: [cấu trúc application](architecture/code-structure.md). Model thiết kế đích không đồng nghĩa toàn bộ bảng/feature đã được triển khai.
+
 ## Vị trí tài liệu
 
 | Thư mục | Nội dung |

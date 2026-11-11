@@ -1,5 +1,7 @@
 # Tái cấu trúc repository — 2026-11-11
 
+Đây là lịch sử migration tài liệu ban đầu. Đợt [refactor application](code-structure.md) sau đó đã bỏ generator ERD JavaScript chỉ dùng cho model cũ; các hình và tài liệu legacy vẫn giữ nguyên.
+
 ## Các file đã chuyển
 
 | Vị trí cũ | Vị trí mới |

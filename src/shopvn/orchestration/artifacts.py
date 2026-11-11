@@ -1,9 +1,10 @@
 """Shared run artifacts: standard library only, usable from the isolated Spark Python."""
 
 import json
-from pathlib import Path
 
-RUNTIME = Path("/workspace/runtime/orchestration/runs")
+from shopvn.config import ProjectPaths
+
+RUNTIME = ProjectPaths.from_env().runtime / "orchestration/runs"
 
 
 def folder(key):

@@ -10,6 +10,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Ghi baseline stack, model và các giới hạn chưa kiểm chứng.
 - [x] Tách cấu hình nguồn và chỗ dành cho platform.
 - [x] Thêm hướng dẫn Git, env template và CI kiểm tra repository.
+- [x] Refactor package theo layer/domain, bỏ runtime dependency vào scripts, đóng gói SQL và kiểm chứng wheel độc lập. Xem [bản đồ code](code-structure.md).
 
 ## Giai đoạn 1 — Profiling nguồn
 

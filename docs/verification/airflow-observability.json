@@ -1,10 +1,10 @@
 {
-  "started_at_utc": "2026-11-11T15:18:13.984222+00:00",
+  "started_at_utc": "2026-11-11T15:53:29.293880+00:00",
   "status": "passed",
   "business_date": "2026-06-30",
   "scope": "actual LocalExecutor/Spark/Trino; local Prometheus/Grafana; no Kafka, Superset or outbound notifications",
   "blocked": {
-    "dag_run_id": "manual__verify_blocked_20261111T151814854429",
+    "dag_run_id": "manual__verify_blocked_20261111T155330157534",
     "state": "failed",
     "tasks": [
       [
@@ -45,8 +45,8 @@
     ]
   },
   "publication_unchanged_on_failure": {
-    "before_snapshot_id": 8249857039457435904,
-    "after_snapshot_id": 8249857039457435904
+    "before_snapshot_id": 677444625386042098,
+    "after_snapshot_id": 677444625386042098
   },
   "firing_failure_alerts": [
     {
@@ -60,13 +60,13 @@
         "state": "failed"
       },
       "value": [
-        1794410481.842,
+        1794412618.492,
         "1"
       ]
     }
   ],
   "recovery": {
-    "dag_run_id": "manual__verify_recovery_20261111T152121866608",
+    "dag_run_id": "manual__verify_recovery_20261111T155658490025",
     "state": "success",
     "tasks": [
       [
@@ -118,17 +118,17 @@
       "platform_postgres": true
     },
     "latest_run": {
-      "run_key": "13cc0a6bbe1a5cd5b2fc84cb",
+      "run_key": "fb63b630f16801e0b47b503b",
       "dag_id": "shopvn_direct_finance",
-      "dag_run_id": "manual__verify_recovery_20261111T152121866608",
+      "dag_run_id": "manual__verify_recovery_20261111T155658490025",
       "run_type": "manual",
       "business_date": "2026-06-30",
       "status": "success",
       "stage": "complete",
-      "started_at": "2026-11-11 15:21:24.705876+00:00",
-      "finished_at": "2026-11-11 15:23:09.162534+00:00",
-      "snapshot_id": "fbbf50f048a5410c9d514b9694093e72",
-      "candidate_snapshot_id": 5457574308151328636,
+      "started_at": "2026-11-11 15:57:01.009255+00:00",
+      "finished_at": "2026-11-11 15:58:49.799773+00:00",
+      "snapshot_id": "4425edfbabad4aed8fd3b21f2187ea74",
+      "candidate_snapshot_id": 8172217755042790839,
       "source_amount": "49737232800.00",
       "candidate_amount": "49737232800.00",
       "amount_delta": "0.00",
@@ -141,9 +141,9 @@
       "rule_version": "1.1"
     },
     "open_alerts": [],
-    "last_poll": "2026-11-11T15:23:11.530844+00:00"
+    "last_poll": "2026-11-11T15:59:01.054261+00:00"
   },
-  "certified_snapshot_id": 677444625386042098,
+  "certified_snapshot_id": 1234675708767252518,
   "fin02_total_vnd": "1648602104364.00",
   "grafana": {
     "title": "ShopVN \u2014 Pipeline & Data Quality",
@@ -152,6 +152,6 @@
     "prometheus_proxy_query": "passed; 8 observed service/component metrics healthy"
   },
   "deadline_verification": "08:00 policy covered by fixed-clock unit tests; native 30-minute expiry not awaited in this smoke test",
-  "finished_at_utc": "2026-11-11T15:23:25.348044+00:00",
+  "finished_at_utc": "2026-11-11T15:59:08.971075+00:00",
   "spark_engine_observed_in_task_log": "3.5.9"
 }

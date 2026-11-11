@@ -5,11 +5,14 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from shopvn.clients.trino import trino_query
+from shopvn.config import ProjectPaths
+from shopvn.ingestion.postgres import extract
 from shopvn.orchestration import ops
 from shopvn.orchestration.artifacts import load, save
+from shopvn.quality.finance import amount_for_day, expected_fin02, queried_fin02
 
 
 def initialize(**context):
@@ -33,21 +36,19 @@ def initialize(**context):
 
 
 def extract_snapshot(**context):
-    from extract_direct_snapshot import extract
-
     key = context["ti"].xcom_pull(task_ids="initialize")
     state = load(key, "context.json")
     ops.update_run(key, stage="extract", attempts=context["ti"].try_number)
     if "snapshot_id" not in state:
         manifest_path = extract()
-        manifest = json.loads(manifest_path.read_text())
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         state["snapshot_id"] = manifest["snapshot_id"]
         save(key, "context.json", state)
     else:
         manifest = json.loads(
-            (
-                Path("/workspace/runtime/direct/landing") / state["snapshot_id"] / "manifest.json"
-            ).read_text()
+            (ProjectPaths.from_env().landing / state["snapshot_id"] / "manifest.json").read_text(
+                encoding="utf-8"
+            )
         )
     period = manifest.get("source_order_date_range") or {
         "min_date": min(r["order_date"] for r in manifest["fin02_expected_by_day_channel"]),
@@ -63,43 +64,28 @@ def extract_snapshot(**context):
         raise ValueError(
             "SourceCoverageError: requested business date is outside the observed source period"
         )
-    source_amount = sum(
-        Decimal(r["net_customer_amount"])
-        for r in manifest["fin02_expected_by_day_channel"]
-        if r["order_date"] == state["business_date"]
-    )
+    source_amount = amount_for_day(expected_fin02(manifest), state["business_date"])
     ops.update_run(key, source_amount=source_amount)
     return state["snapshot_id"]
 
 
 def validate_candidate(**context):
-    from run_lakehouse_spike import trino_query
-
     key = context["ti"].xcom_pull(task_ids="initialize")
     state = load(key, "context.json")
     ops.update_run(key, stage="validate", attempts=context["ti"].try_number)
     transform = load(key, "transform.json")
     manifest = json.loads(
-        (
-            Path("/workspace/runtime/direct/landing") / state["snapshot_id"] / "manifest.json"
-        ).read_text()
+        (ProjectPaths.from_env().landing / state["snapshot_id"] / "manifest.json").read_text(
+            encoding="utf-8"
+        )
     )
     snapshot = int(transform["candidate_snapshot_id"])
     rows = trino_query(f"""SELECT CAST(order_date AS VARCHAR),channel,eligible_order_count,
                           CAST(net_customer_amount AS VARCHAR) FROM lakehouse.staging.mart_fin02_{key}
                           FOR VERSION AS OF {snapshot} ORDER BY 1,2""")
-    actual = {(r[0], r[1]): (r[2], Decimal(r[3])) for r in rows}
-    expected = {
-        (r["order_date"], r["channel"]): (
-            r["eligible_order_count"],
-            Decimal(r["net_customer_amount"]),
-        )
-        for r in manifest["fin02_expected_by_day_channel"]
-    }
-    amount = sum(value[1] for (day, _), value in actual.items() if day == state["business_date"])
-    source_amount = sum(
-        value[1] for (day, _), value in expected.items() if day == state["business_date"]
-    )
+    actual, expected = queried_fin02(rows), expected_fin02(manifest)
+    amount = amount_for_day(actual, state["business_date"])
+    source_amount = amount_for_day(expected, state["business_date"])
     injected = (context["dag_run"].conf or {}).get("force_validation_failure", False)
     once = (context["dag_run"].conf or {}).get("validation_fail_once", False) and context[
         "ti"
@@ -135,8 +121,6 @@ def validate_candidate(**context):
 
 
 def verify_and_finish(**context):
-    from run_lakehouse_spike import trino_query
-
     key = context["ti"].xcom_pull(task_ids="initialize")
     state = load(key, "context.json")
     approved = load(key, "validation.json")

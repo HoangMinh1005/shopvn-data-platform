@@ -1,11 +1,5 @@
 # Công cụ ERD lịch sử
 
-`generate_erd.mjs` chỉ tạo lại ERD của bản model cũ, không tạo baseline hiện hành.
+Generator JavaScript cho ERD cũ đã được bỏ trong đợt refactor vì không tạo baseline hiện hành. Có thể khôi phục từ commit `2430174` nếu cần nghiên cứu lịch sử. Không cần Node.js để chạy application.
 
-Từ root:
-
-```powershell
-node scripts/legacy/generate_erd.mjs
-```
-
-Script luôn ghi [SVG legacy](../../docs/data-model/legacy/images/shopvn_gold_erd.svg) theo vị trí script, không phụ thuộc working directory. PNG cũ được giữ nguyên; script không tự tạo PNG.
+[SVG legacy](../../docs/data-model/legacy/images/shopvn_gold_erd.svg), PNG và tài liệu gốc vẫn được giữ. ERD hiện hành là [Mermaid](../../docs/data-model/gold-erd.mmd).

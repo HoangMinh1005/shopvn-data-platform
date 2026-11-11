@@ -1,6 +1,6 @@
 # Quy trình làm việc
 
-1. Tạo nhánh từ `main`: `feat/<ten-viec>`, `fix/<ten-loi>` hoặc `docs/<ten-tai-lieu>`.
+1. Tạo nhánh công việc: `feat/<ten-viec>`, `fix/<ten-loi>`, `refactor/<ten-viec>` hoặc `docs/<ten-tai-lieu>`; review/merge theo nhánh chung của nhóm.
 2. Mỗi thay đổi tập trung một mục đích; ghi rõ input/output và cách kiểm tra.
 3. Đọc [nghiệp vụ đã duyệt](docs/business/business-rules-v1.md) trước khi sửa logic tính KPI.
 4. Chạy `python scripts/check_repository.py`; nếu sửa Compose, chạy thêm lệnh validate trong README.
@@ -11,6 +11,7 @@
 
 - Dùng Python 3.11 cho application; không cài Airflow, Spark, Superset chung một môi trường Python host.
 - Business logic đặt trong `src/shopvn/`, DAG chỉ điều phối.
+- Application không import từ scripts/. Chạy unit/reference tests và Ruff; khi sửa transform, chạy thêm Spark integration/replay theo [hướng dẫn tests](tests/README.md).
 - Tên Python: `snake_case`; tên bảng: `dim_*`, `fact_*`, `mart_*`; source IDs giữ riêng theo nguồn.
 - Timestamp lưu kèm quy ước timezone; ngày nghiệp vụ dùng Asia/Ho_Chi_Minh.
 - Dùng biến môi trường/secret cho credential; `.env.example` chỉ chứa placeholder.
@@ -19,4 +20,4 @@
 
 ## Trạng thái dependency
 
-`pyproject.toml` mới khai báo package và quy tắc lint. Dependency runtime/provider/JAR và image digest sẽ được khóa sau technical spike; không xem repo hiện tại là một build platform đã kiểm chứng.
+`pyproject.toml` khai báo package, optional dependency groups và console entry points. Host tools được pin ở requirements-preparation.txt; Airflow dùng constraints và runtime image lock riêng, Spark/JAR/core images có verified-lock. Xem [runtime evidence](docs/verification/README.md). Wheel/Local Compose đã được kiểm chứng trong scope ghi rõ; chưa có full-stack production certification hoặc Kafka/Superset runtime.

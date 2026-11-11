@@ -2,6 +2,8 @@
 
 Phạm vi: đưa slice PostgreSQL → Spark/Iceberg → Trino hiện có vào Airflow, thêm audit, retry, publication gate và giám sát. Không triển khai Kafka/Superset, không thay đổi DB nguồn và không gửi email/Slack.
 
+Application đã tách thành package theo [bản đồ code](../../../docs/architecture/code-structure.md). Cài package trên host trước khi chạy tools: `python -m pip install --no-deps -e .` hoặc uv tương đương. Container dùng PYTHONPATH=/workspace/src; không import runtime helpers từ scripts.
+
 ## Kiến trúc thực thi
 
 Airflow 3.4.0 LocalExecutor và Spark provider 6.3.4 chạy trên image Spark đã kiểm chứng. Airflow dùng Python virtualenv riêng; Spark driver/executor dùng Python gốc 3.11 và Spark 3.5.9, không dùng pyspark-client đi kèm provider làm engine. Không mount Docker socket, không cần Celery/Redis hoặc cluster Spark riêng ở bước local này.

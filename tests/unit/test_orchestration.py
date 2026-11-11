@@ -1,4 +1,3 @@
-import sys
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from enum import Enum
@@ -74,9 +73,7 @@ def test_requested_day_outside_source_coverage_is_blocked(monkeypatch, tmp_path)
     manifest.write_text(
         '{"snapshot_id":"snapshot","source_order_date_range":{"min_date":"2026-06-01","max_date":"2026-06-30"}}'
     )
-    monkeypatch.setitem(
-        sys.modules, "extract_direct_snapshot", SimpleNamespace(extract=lambda: manifest)
-    )
+    monkeypatch.setattr(tasks, "extract", lambda: manifest)
     monkeypatch.setattr(tasks, "load", lambda *a: {"business_date": "2026-11-10"})
     monkeypatch.setattr(tasks, "save", lambda *a: None)
     monkeypatch.setattr(ops, "update_run", lambda *a, **kw: None)

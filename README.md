@@ -8,7 +8,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 - Có Compose cho ba nguồn PostgreSQL, Logistics API và SFTP.
 - Core Spark–Iceberg–MinIO–JDBC Catalog–Trino đã chạy thành công. Direct Finance có Bronze/Silver/Gold, source reconciliation và biểu đồ từ Trino; đã có Airflow orchestration và Prometheus/Grafana giám sát. Kafka/Superset chưa triển khai.
 - ERD và kế hoạch cũ được giữ trong `legacy/`; đọc baseline hiện hành trước khi dùng lại.
-- Đã profiling 9 bảng và marketplace files, bổ sung KPI/data contracts, 45 unit/reference tests, 3 fresh-process replay checks cho core/direct và smoke test Airflow failure → recovery. [Bằng chứng thực thi](docs/verification/README.md) ghi rõ scope đã pass và phần còn thiếu.
+- Đã profiling 9 bảng và marketplace files, bổ sung KPI/data contracts, 59 unit/reference tests, 4 Spark layer integration tests, 3 fresh-process replay checks cho core/direct và smoke test Airflow failure → recovery. [Bằng chứng thực thi](docs/verification/README.md) ghi rõ scope đã pass và phần còn thiếu.
 - Nghiệp vụ hiện hành v1.1 đã chốt: FIN02 net customer amount là KPI Finance chính cho direct; inventory chỉ current stock và actual snapshots từ go-live, chặn June backfill. [Biên bản BR31/BR32](docs/business/decisions/2026-11-11-finance-inventory.md).
 
 ## Tài liệu bắt đầu
@@ -30,6 +30,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 | Core lakehouse spike | [Spike runbook](infra/platform/spike/README.md) |
 | Kết quả triển khai direct Finance | [Verification report + chart](docs/verification/README.md) |
 | Airflow + Prometheus/Grafana | [Setup và vận hành](infra/platform/airflow/README.md) |
+| Cấu trúc code và migration | [Application structure](docs/architecture/code-structure.md) |
 | Cách đóng góp | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## Cấu trúc thư mục
@@ -38,9 +39,8 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 docs/                   Tài liệu nguồn, nghiệp vụ, kiến trúc, model và runbook
 infra/sources/          Compose cho nguồn dữ liệu được cung cấp
 infra/platform/         Core lakehouse và Airflow/monitoring Compose
-infra/config/           Cấu hình service, không chứa secret
 dags/                   Airflow DAGs
-src/shopvn/             Python/PySpark modules
+src/shopvn/             Package: ingestion, layers, marts, pipelines, jobs, orchestration
 schemas/                Schema contract của nguồn và Kafka
 sql/                    Trino views và truy vấn đối soát
 scripts/                Bootstrap, profiling, backfill, công cụ tài liệu
@@ -48,7 +48,7 @@ tests/                  Unit/integration tests và fixture giả lập
 .github/workflows/      CI kiểm tra repository
 ```
 
-Các thư mục chứa `.gitkeep` còn là khung cho phần chưa triển khai. Code direct Finance hiện ở src/shopvn/transformations/direct_sales.py; entry points và renderer ở scripts/.
+Các tầng được tách trong src/shopvn/transformations/bronze, silver, gold; Finance mart ở src/shopvn/marts và workflow ở src/shopvn/pipelines. Scripts chỉ giữ CLI wrappers và công cụ repository. Xem [bản đồ code](docs/architecture/code-structure.md).
 
 ## Chuẩn bị môi trường
 
@@ -93,6 +93,8 @@ Application đọc PostgreSQL bằng `shopvn_reader`; API nguồn giữ cấu h�
 ## Kiểm tra repository
 
 ```powershell
+python -m pip install -r requirements-preparation.txt
+python -m pip install --no-deps -e .
 python scripts/check_repository.py
 docker compose --env-file .env -f infra/sources/docker-compose.yml config --quiet
 ```
@@ -101,7 +103,7 @@ Kiểm tra này xác nhận cấu trúc, link và env/key riêng không bị tra
 
 ## Git và remote
 
-Nhánh chính: `main`. Dùng nhánh ngắn như `feat/source-profiling` và review trước khi merge. Người dùng đã push phần chuẩn bị; phần Airflow/monitoring nằm trên `feat/airflow-observability`, chưa tự push hoặc merge. Với bản clone chưa có remote, cấu hình như sau:
+Nhánh chính: `main`. Dùng nhánh ngắn và review trước khi merge. Airflow/monitoring ở commit `2430174`; đợt refactor ở `refactor/product-structure`, chưa tự push hoặc merge. Với bản clone chưa có remote, cấu hình như sau:
 
 ```powershell
 git remote add origin <REMOTE_URL>

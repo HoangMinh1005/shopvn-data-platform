@@ -11,7 +11,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from run_lakehouse_spike import trino_query
+from shopvn.clients.trino import trino_query
 
 ROOT = Path(__file__).resolve().parents[1]
 DAG = "shopvn_direct_finance"
@@ -111,6 +111,9 @@ def main():
         report["blocked"] = api.wait(blocked_id)
         assert report["blocked"]["state"] == "failed"
         blocked_tasks = {task: (state, tries) for task, state, tries in report["blocked"]["tasks"]}
+        assert blocked_tasks["extract_snapshot"][0] == "success"
+        assert blocked_tasks["transform_candidate"][0] == "success"
+        assert blocked_tasks["validate_candidate"] == ("failed", 3)
         assert blocked_tasks["publish_finance"][0] == "upstream_failed"
         assert blocked_tasks["finalize"][0] == "failed"
         after = certified_snapshot()

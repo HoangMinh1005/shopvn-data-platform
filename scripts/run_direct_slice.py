@@ -8,8 +8,10 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 
-from extract_direct_snapshot import extract
-from run_lakehouse_spike import compose, trino_query, wait_http
+from run_lakehouse_spike import compose, wait_http
+
+from shopvn.clients.trino import trino_query
+from shopvn.ingestion.postgres import extract
 
 ROOT = Path(__file__).resolve().parents[1]
 
