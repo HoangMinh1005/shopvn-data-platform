@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử
 
-Chưa có test xử lý dữ liệu; CI hiện chỉ kiểm tra repository và cú pháp Compose. Không xem CI xanh là bằng chứng pipeline/KPI đã đúng.
+Đã có 15 reference/unit checks cho [bộ số giả lập](fixtures/business_acceptance.json) và helper tính toán trong src/shopvn/quality/acceptance.py. CI kiểm tra repository, lint, synthetic tests và cú pháp Compose. Chưa có production Spark integration test đã pass; không xem CI xanh là bằng chứng toàn pipeline đúng.
 
 - `fixtures/`: dữ liệu nhỏ được giả lập và kết quả tính tay.
 - `unit/`: transformation/business rule tests khi có implementation.

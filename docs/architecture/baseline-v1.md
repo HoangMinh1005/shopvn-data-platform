@@ -2,6 +2,8 @@
 
 Ngày ghi nhận: 2026-11-11. Stack được chọn trong hội thoại; **chưa được kiểm chứng bằng technical spike**. Danh sách dưới đây là mục tiêu triển khai, chưa phải lockfile hoặc chứng nhận tương thích end-to-end.
 
+Kết quả chuẩn bị và giới hạn thực tế: [preimplementation status](preimplementation-status.md). Generic Spark image khác runtime mục tiêu; MinIO public image không còn pull được, đang dùng source-build pinned commit cho demo. Không tuyên bố stack đơn giản để dựng từ image upstream có sẵn khi chưa chạy thành công.
+
 ## Kiến trúc
 
 ```text

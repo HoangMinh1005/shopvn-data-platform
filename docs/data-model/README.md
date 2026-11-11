@@ -1,6 +1,6 @@
 # Data model hiện hành
 
-Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Iceberg trên MinIO. [Business rules v1](../business/business-rules-v1.md) là hợp đồng tính KPI. Chưa có physical data dictionary/ERD cuối đã đối chiếu dữ liệu thực.
+Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Iceberg trên MinIO. [Business rules v1](../business/business-rules-v1.md) và [KPI contracts](../business/kpi-contracts-v1.md) điều khiển KPI. Đã bổ sung [data dictionary](data-dictionary-v1.md), [load contracts](load-contracts-v1.md) và [ERD Mermaid](gold-erd.mmd) sau profiling nguồn. Xem [findings](../profiling/findings.md): inventory history và refund composition còn giới hạn cần xử lý trước publication.
 
 ## Phân lớp
 

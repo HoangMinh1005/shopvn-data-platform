@@ -8,6 +8,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 - Có Compose cho ba nguồn PostgreSQL, Logistics API và SFTP.
 - Stack platform đã được chọn ở mức thiết kế; chưa có platform Compose hoặc pipeline chạy end-to-end.
 - ERD và kế hoạch cũ được giữ trong `legacy/`; đọc baseline hiện hành trước khi dùng lại.
+- Đã profiling 9 bảng và marketplace files, bổ sung KPI/data contracts và 15 acceptance reference tests. [Trạng thái chuẩn bị](docs/architecture/preimplementation-status.md) ghi rõ các giới hạn nguồn và core spike chưa pass.
 
 ## Tài liệu bắt đầu
 
@@ -20,6 +21,12 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 | Kiến trúc và stack đã chọn | [Architecture baseline](docs/architecture/baseline-v1.md) |
 | Data model hiện hành và các điểm cần xác minh | [Model baseline](docs/data-model/README.md) |
 | Công việc tiếp theo | [Implementation readiness](docs/architecture/implementation-readiness.md) |
+| Kết quả profiling thực tế | [Source findings](docs/profiling/findings.md) |
+| KPI contracts | [KPI contracts v1](docs/business/kpi-contracts-v1.md) |
+| Data dictionary và mapping | [Gold data dictionary](docs/data-model/data-dictionary-v1.md) |
+| ERD hiện hành | [Gold ERD](docs/data-model/gold-erd.md) |
+| Bộ số nghiệm thu | [Acceptance cases](docs/business/acceptance-cases.md) |
+| Core lakehouse spike | [Spike runbook](infra/platform/spike/README.md) |
 | Cách đóng góp | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## Cấu trúc thư mục
@@ -91,7 +98,7 @@ Kiểm tra này xác nhận cấu trúc, đường dẫn tài liệu được du
 
 ## Git và remote
 
-Nhánh chính: `main`. Dùng nhánh ngắn như `feat/source-profiling` và review trước khi merge. Repository được khởi tạo **cục bộ**; remote GitHub/GitLab chưa được cấu hình. Khi có URL remote của nhóm:
+Nhánh chính: `main`. Dùng nhánh ngắn như `feat/source-profiling` và review trước khi merge. Người dùng đã kết nối remote GitHub cho repo; các bước chuẩn bị mới ở nhánh `feat/preimplementation-readiness`, chưa tự push hoặc merge. Với bản clone chưa có remote, cấu hình như sau:
 
 ```powershell
 git remote add origin <REMOTE_URL>

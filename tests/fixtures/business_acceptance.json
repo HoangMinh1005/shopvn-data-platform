@@ -1,0 +1,51 @@
+{
+  "description": "Synthetic VND examples; expected results calculated independently by hand.",
+  "orders": [
+    {"id":"O1","customer":"C1","status":"delivered","payment":"paid","subtotal":100000,"discount":10000,"shipping":15000},
+    {"id":"O2","customer":"C1","status":"returned","payment":"paid","subtotal":200000,"discount":0,"shipping":20000},
+    {"id":"O3","customer":"C2","status":"cancelled","payment":"refunded","subtotal":70000,"discount":0,"shipping":0},
+    {"id":"O4","customer":"C2","status":"shipping","payment":"paid","subtotal":50000,"discount":0,"shipping":0},
+    {"id":"O5","customer":"C2","status":"delivered","payment":"paid","subtotal":10000,"discount":12000,"shipping":0},
+    {"id":"O6","customer":"C2","status":"delivered","payment":"pending","subtotal":100000,"discount":0,"shipping":0},
+    {"id":"O7","customer":"C2","status":"delivered","payment":"failed","subtotal":100000,"discount":0,"shipping":0},
+    {"id":"O8","customer":"C2","status":"delivered","payment":"paid","subtotal":3,"discount":1,"shipping":0},
+    {"id":"O9","customer":"C3","status":"confirmed","payment":"paid","subtotal":50000,"discount":0,"shipping":0},
+    {"id":"O10","customer":"C3","status":"delivered","payment":"paid","subtotal":25000,"discount":0,"shipping":0}
+  ],
+  "lines": [
+    {"id":"L1","order":"O1","quantity":2,"total_price":60000},
+    {"id":"L2","order":"O1","quantity":1,"total_price":40000},
+    {"id":"L3","order":"O2","quantity":1,"total_price":200000},
+    {"id":"L8a","order":"O8","quantity":1,"total_price":1},
+    {"id":"L8b","order":"O8","quantity":1,"total_price":1},
+    {"id":"L8c","order":"O8","quantity":1,"total_price":1},
+    {"id":"L10a","order":"O10","quantity":0,"total_price":0},
+    {"id":"L10b","order":"O10","quantity":1,"total_price":25000}
+  ],
+  "returns": [
+    {"id":"R1","order":"O1","status":"approved","amount":5000},
+    {"id":"R2","order":"O2","status":"refunded","amount":30000},
+    {"id":"R3","order":"O2","status":"refunded","amount":20000},
+    {"id":"R4","order":"O3","status":"refunded","amount":70000}
+  ],
+  "marketplace": [
+    {"id":"M1","status":"completed","sale_price":100000,"quantity":2,"platform_discount":10000,"commission_rate":"0.08","net_revenue":184000},
+    {"id":"M2","status":"returned","sale_price":50000,"quantity":1,"platform_discount":0,"commission_rate":"0.10","net_revenue":45000},
+    {"id":"M3","status":"disputed","sale_price":70000,"quantity":1,"platform_discount":0,"commission_rate":"0.10","net_revenue":63000},
+    {"id":"M4","status":"completed","sale_price":101,"quantity":3,"platform_discount":50,"commission_rate":"0.075","net_revenue":280}
+  ],
+  "shipments": [
+    {"status":"delivered","shipped_at":"2026-06-01T10:00:00+07:00","delivered_at":"2026-06-02T10:00:00+07:00","eta":"2026-06-02"},
+    {"status":"delivered","shipped_at":"2026-06-01T10:00:00+07:00","delivered_at":"2026-06-03T10:00:00+07:00","eta":"2026-06-02"},
+    {"status":"failed"}, {"status":"returned"}, {"status":"in_transit"}
+  ],
+  "expected": {
+    "eligible_orders":4,"eligible_customers":3,"merchandise_before_refund":315002,
+    "refunded":50000,"adjusted_merchandise":265002,"customer_total_after_refund":300002,
+    "units_sold":8,"valid_sales_lines":7,"invalid_discount_orders":1,
+    "marketplace_merchandise":200303,"marketplace_reported_net":184280,"marketplace_units":5,
+    "delivered":2,"terminal_shipments":4,"delivery_success_rate":"0.5","average_delivery_hours":"36.0","late_deliveries":1,
+    "allocation_O1":{"L1":6000,"L2":4000},"allocation_O8":{"L8a":1,"L8b":0,"L8c":0},
+    "stock_before_later_changes":85
+  }
+}
