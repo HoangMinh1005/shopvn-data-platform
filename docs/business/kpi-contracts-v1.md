@@ -7,6 +7,7 @@ Nghiệp vụ tham chiếu [BR01–BR32, rule version 1.1](business-rules-v1.md)
 - Eligible direct: status delivered/returned, payment paid/refunded, discount trong [0, subtotal], khóa nguồn hợp lệ. Không ép đơn discount lỗi thành doanh thu 0. Dòng quantity 0 không tham gia units/sales-line denominator.
 - Eligible marketplace: completed trong file đã xác minh MD5. Không trộn returned/disputed vào completed revenue.
 - Refund: tổng theo order_id trước khi ghép order, chỉ status refunded. payment_status refunded không tạo phép trừ lần hai.
+- Source discount có phần lẻ (đã gặp 403 orders): giữ precision DECIMAL(20,2). Phân bổ integer VND theo BR09, fractional remainder vào rank đầu ổn định; không làm tròn source total/refund để ép khớp.
 - order_date dùng để restate cohort; report có data_as_of/published_at/publication_id/source_completeness. Không có actual refund timestamp hoặc payout confirmation.
 - So sánh direct/marketplace dùng merchandise sau discount **trước refund và commission** trên cùng date/channel grain. Marketplace thiếu refund detail nên không gọi so sánh này là net after return toàn kênh.
 - Báo cáo từng nguồn có thể partial khi nguồn khác thiếu; tổng toàn kênh gắn completeness, không thay missing thành 0. DQ block là trạng thái publication, không phải một dòng doanh thu bằng 0.

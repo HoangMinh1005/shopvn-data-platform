@@ -54,9 +54,11 @@ services:
       SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set SPIKE_MINIO_USER}
       SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set SPIKE_MINIO_PASSWORD}
       SPARK_LOCAL_IP: 127.0.0.1
+      PYTHONPATH: /workspace/src
     volumes:
       - ../../../scripts:/workspace/scripts:ro
-      - ../../../runtime/spike:/workspace/runtime/spike
+      - ../../../src:/workspace/src:ro
+      - ../../../runtime:/workspace/runtime
     entrypoint: [/opt/spark/bin/spark-submit]
     command: [--master, 'local[2]', --driver-memory, 1g, /workspace/scripts/spike_spark.py]
     depends_on:

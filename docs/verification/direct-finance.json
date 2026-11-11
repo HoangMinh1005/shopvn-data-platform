@@ -1,0 +1,88 @@
+{
+  "started_at_utc": "2026-11-11T14:02:14.479698+00:00",
+  "snapshot_id": "f9ab3307f23a4828914c04695a042b4d",
+  "rule_version": "1.1",
+  "runs": [
+    {
+      "snapshot_id": "f9ab3307f23a4828914c04695a042b4d",
+      "run_id": "6e2b38b379a442d79a87e24101983e1c",
+      "rule_version": "1.1",
+      "status": "passed",
+      "fin02_total": "1648602104364.00",
+      "eligible_orders": 110911,
+      "mart_rows": 60,
+      "fact_counts": {
+        "fact_order": 211806,
+        "fact_sales_line": 444142,
+        "fact_return": 4215
+      },
+      "source_counts": {
+        "orders": 211806,
+        "order_items": 444142,
+        "returns": 4215,
+        "customers": 50000,
+        "products": 2000,
+        "vouchers": 200
+      },
+      "excluded_discount_orders": 622,
+      "zero_quantity_lines": 4420
+    },
+    {
+      "snapshot_id": "f9ab3307f23a4828914c04695a042b4d",
+      "run_id": "4f30f4570f9b4959bb0d07e5854a3903",
+      "rule_version": "1.1",
+      "status": "passed",
+      "fin02_total": "1648602104364.00",
+      "eligible_orders": 110911,
+      "mart_rows": 60,
+      "fact_counts": {
+        "fact_order": 211806,
+        "fact_sales_line": 444142,
+        "fact_return": 4215
+      },
+      "source_counts": {
+        "orders": 211806,
+        "order_items": 444142,
+        "returns": 4215,
+        "customers": 50000,
+        "products": 2000,
+        "vouchers": 200
+      },
+      "excluded_discount_orders": 622,
+      "zero_quantity_lines": 4420
+    },
+    {
+      "snapshot_id": "f9ab3307f23a4828914c04695a042b4d",
+      "run_id": "5daa0b4d2783449e90ccdd289dbfd278",
+      "rule_version": "1.1",
+      "status": "passed",
+      "fin02_total": "1648602104364.00",
+      "eligible_orders": 110911,
+      "mart_rows": 60,
+      "fact_counts": {
+        "fact_order": 211806,
+        "fact_sales_line": 444142,
+        "fact_return": 4215
+      },
+      "source_counts": {
+        "orders": 211806,
+        "order_items": 444142,
+        "returns": 4215,
+        "customers": 50000,
+        "products": 2000,
+        "vouchers": 200
+      },
+      "excluded_discount_orders": 622,
+      "zero_quantity_lines": 4420
+    }
+  ],
+  "status": "passed",
+  "trino_rows": 60,
+  "trino_fin02_total": "1648602104364.00",
+  "source_transaction": {
+    "isolation": "repeatable read",
+    "read_only": "on",
+    "snapshot": "863:863:"
+  },
+  "finished_at_utc": "2026-11-11T14:04:54.712473+00:00"
+}

@@ -1,8 +1,8 @@
 # Kiến trúc baseline v1
 
-Ngày ghi nhận: 2026-11-11. Stack được chọn trong hội thoại; **chưa được kiểm chứng bằng technical spike**. Danh sách dưới đây là mục tiêu triển khai, chưa phải lockfile hoặc chứng nhận tương thích end-to-end.
+Ngày ghi nhận: 2026-11-11. **Core Spark–Iceberg–MinIO–PostgreSQL JDBC Catalog–Trino đã được kiểm chứng**, xem [runtime evidence](../verification/README.md) và [core image/JAR lock](../../infra/platform/spike/verified-lock.json). Airflow/provider, Kafka và Superset trong bảng vẫn là baseline mục tiêu, chưa phải full-stack runtime certification.
 
-Kết quả chuẩn bị và giới hạn thực tế: [preimplementation status](preimplementation-status.md). Generic Spark image khác runtime mục tiêu; MinIO public image không còn pull được, đang dùng source-build pinned commit cho demo. Không tuyên bố stack đơn giản để dựng từ image upstream có sẵn khi chưa chạy thành công.
+Kết quả chuẩn bị và giới hạn thực tế: [preimplementation status](preimplementation-status.md). Generic Spark image khác runtime mục tiêu nên đã build image riêng Python3.11.15/Java17.0.21; MinIO dùng source-build pinned commit cho demo. Core đã chạy được từ cấu hình repo; không tự suy tương thích của các thành phần chưa test.
 
 ## Kiến trúc
 

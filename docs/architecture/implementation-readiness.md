@@ -26,21 +26,22 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Ghi identity, update/delete, incremental, backfill/idempotency; chặn phần thiếu nguồn.
 - [x] Tạo KPI contracts với business-rule IDs, phân biệt approved với chi tiết pending.
 - [x] Vẽ ERD hiện hành bằng Mermaid; không dùng ERD legacy làm bản cuối.
-- [x] Tạo fixture giả lập và chạy 20 reference/unit tests sau BR31/BR32; không coi là production integration tests.
+- [x] Tạo fixture giả lập và chạy 23 reference/unit tests, gồm BR31/BR32 và fractional discount remainder.
 
 ## Giai đoạn 3 — Technical spike
 
-- [ ] Spark ghi Iceberg trên MinIO, Trino đọc cùng catalog.
-- [ ] MERGE và schema addition hoạt động như kỳ vọng.
-- [ ] Cùng input chạy 3 lần có count/sum không đổi.
-- [ ] Restart giữ metadata/data; chỉ dùng volume mới của platform.
-- [ ] Kiểm tra Spark provider, JAR Scala version, JDBC driver, S3 FileIO và JVM từng image.
-- [ ] Khóa image tags/digests và dependency sau kiểm chứng.
+- [x] Spark ghi Iceberg trên MinIO, Trino đọc cùng catalog.
+- [x] MERGE và schema addition hoạt động như kỳ vọng.
+- [x] Cùng input chạy 3 process mới có count/sum không đổi: storage spike và direct Finance slice.
+- [x] Restart catalog/MinIO/Trino giữ dữ liệu storage probe; chỉ dùng volumes của spike.
+- [x] Kiểm tra core Spark/Scala/JDBC/S3FileIO/JVM và ghi image/JAR identities.
+- [x] Ghi verified-lock cho core đã test và pin host preparation/chart dependencies.
+- [ ] Kiểm chứng Airflow Spark provider/submit, Kafka và Superset ở giai đoạn tiếp theo.
 
-Spike đã có Compose/runner, chưa đạt vì image/artifact download chưa hoàn tất. Xem runbook và evidence trong báo cáo trạng thái. Airflow provider/Kafka/Superset vẫn cần kiểm chứng riêng sau core spike.
+Core spike và direct Finance đã pass, xem [bằng chứng thực thi](../verification/README.md). Airflow provider/Kafka/Superset vẫn cần kiểm chứng riêng; không gắn nhãn full MVP production-ready.
 
 ## Luồng triển khai đầu tiên
 
-Direct orders + order_items -> Bronze -> Silver -> fact_order + fact_sales_line -> DQ/reconciliation -> Trino -> một chart doanh thu. Sau đó mở rộng marketplace, Logistics API, inventory, Kafka.
+Đã triển khai direct orders + order_items + returns -> Bronze/Silver -> fact_order + fact_sales_line + fact_return -> DQ/source reconciliation -> mart FIN02 -> Trino -> biểu đồ. Bước tiếp theo: Airflow orchestration cho slice này, rồi marketplace/Logistics/inventory/Kafka theo phạm vi đã duyệt.
 
 Definition of Done phải có cả kết quả đúng, khả năng chạy lại, lỗi nguồn được xử lý và visibility trên dashboard/log.

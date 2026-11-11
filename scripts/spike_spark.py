@@ -54,7 +54,7 @@ try:
               TBLPROPERTIES ('format-version'='2', 'write.parquet.compression-codec'='zstd')""")
     spark.sql("""MERGE INTO shopvn.readiness.sales_probe t
               USING (SELECT 'A' line_id, CAST(100 AS DECIMAL(18,2)) amount) s
-              ON t.line_id=s.line_id WHEN NOT MATCHED THEN INSERT *""")
+              ON t.line_id=s.line_id WHEN NOT MATCHED THEN INSERT (line_id,amount) VALUES (s.line_id,s.amount)""")
     if "source_system" not in spark.table("shopvn.readiness.sales_probe").columns:
         spark.sql("ALTER TABLE shopvn.readiness.sales_probe ADD COLUMNS (source_system STRING)")
     spark.sql("""CREATE OR REPLACE TEMP VIEW desired AS

@@ -10,4 +10,4 @@
 | quality | Data checks và reconciliation |
 | common | Cấu hình, logging, tiện ích dùng chung |
 
-Các module hiện mới là thư mục dự phòng, chưa có pipeline implementation. Khi thêm Python module, tạo package tương ứng và kiểm thử theo contract.
+Đã có shared Spark runtime/advisory lock, direct Finance transformations và acceptance reference helpers. Source extract/runtime runners ở scripts/. Các nguồn marketplace/API/Kafka và module còn lại chưa có implementation; xem [runtime evidence](../../docs/verification/README.md) để biết scope đã chạy.

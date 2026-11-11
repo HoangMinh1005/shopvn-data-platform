@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import subprocess
 import time
@@ -12,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-COMPOSE = ["docker", "compose", "--env-file", str(ROOT / ".env"),
+COMPOSE = ["docker", "compose", "--project-name", "shopvn-readiness", "--env-file", str(ROOT / ".env"),
            "-f", str(ROOT / "infra/platform/spike/compose.yml")]
 
 
@@ -30,7 +31,7 @@ def wait_http(url: str, timeout: int = 180):
                         time.sleep(2)
                         continue
                     return
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.RemoteDisconnected):
             pass
         time.sleep(2)
     raise TimeoutError(f"Service not ready: {url}")

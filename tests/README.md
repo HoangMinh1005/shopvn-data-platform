@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử
 
-Đã có 20 reference/unit checks cho [bộ số giả lập](fixtures/business_acceptance.json) và helper tính toán trong src/shopvn/quality/acceptance.py, gồm lựa chọn Finance primary và BR32 go-live scope gate. CI kiểm tra repository, lint, synthetic tests và cú pháp Compose. Chưa có production Spark integration test đã pass; không xem CI xanh là bằng chứng toàn pipeline đúng.
+Đã có 23 unit/reference checks cho [bộ số giả lập](fixtures/business_acceptance.json), gồm BR31/BR32 và fractional source discount. Runtime integration runners cho storage và direct Finance đã chạy 3 fresh Spark processes, nguồn/Spark/Trino đối soát khớp; xem [evidence](../docs/verification/README.md). CI hiện chỉ chạy repository checks, lint, synthetic tests và Compose validation, chưa tự chạy integration stack hoặc nguồn thật.
 
 - `fixtures/`: dữ liệu nhỏ được giả lập và kết quả tính tay.
 - `unit/`: transformation/business rule tests khi có implementation.

@@ -4,6 +4,8 @@ Thiết kế cột dựa trên [schema đã profiling](../profiling/observed-pro
 
 Áp dụng rule version 1.1 (BR31/BR32): net_customer_amount là Direct Finance primary measure; daily inventory chỉ có actual snapshots từ go-live, không backfill June 2026.
 
+Runtime đầu tiên đã triển khai subset phục vụ direct Finance, xem [scope và evidence](../verification/README.md). Dictionary này vẫn là model đích đầy đủ; các field/dimension ngoài scope không được xem là đã deploy.
+
 ## Quy ước type và audit
 
 `!` = NOT NULL, `?` = nullable. `SK` = BIGINT surrogate key, unknown = 0. `DK` = INT YYYYMMDD, unknown = 0. `M` = DECIMAL(20,2), currency_code = VND. `TS` = TIMESTAMP UTC (Spark) với timezone contract; Trino đọc theo UTC và đổi local khi lấy business day. Không dùng FLOAT cho tiền. Với source created_at/last_updated không có timezone: Silver giữ TIMESTAMP_NTZ + source_timezone chưa xác nhận; cột Gold UTC tương ứng chưa được publish cho đến khi contract timezone đủ căn cứ, không tự áp server UTC.
@@ -150,7 +152,7 @@ Không có payment_date trong nguồn; chưa tạo payment_date_key. Không có 
 | unit_sale_price | M! | Direct unit_price-discount_per_item; marketplace sale_price |
 | item_discount_amount | M? | Direct discount_per_item*quantity; marketplace NULL vì semantics platform_discount chưa đủ |
 | line_merchandise_before_header_discount | M! | Direct total_price; marketplace sale_price*quantity |
-| allocated_header_discount_amount | M! | Direct BR09; marketplace 0, source chưa có seller header discount |
+| allocated_header_discount_amount | M? | Direct BR09; NULL khi header lỗi không phân bổ được và bị loại revenue. Integer VND + fractional residual nguồn vào rank đầu để tổng khớp chính xác; marketplace 0 khi không có seller header discount |
 | net_merchandise_before_refund | M! | Line merchandise-allocated discount |
 | commission_rate | DECIMAL(10,6)? | Marketplace commission_rate, direct NULL |
 | partner_reported_net_amount | M? | Marketplace net_revenue nguyên nguồn, direct NULL |

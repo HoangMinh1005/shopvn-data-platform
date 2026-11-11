@@ -1,8 +1,10 @@
 """Download pinned upstream build artifacts into ignored runtime storage, with retries."""
 
+import argparse
 import hashlib
 import json
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -55,18 +57,33 @@ def download_maven(url: str, destination: Path):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only", choices=list(ARTIFACTS), action="append")
+    args = parser.parse_args()
     target = ROOT / "runtime/spike-build"
     target.mkdir(parents=True, exist_ok=True)
     hashes = {}
     for filename, url in ARTIFACTS.items():
+        if args.only and filename not in args.only:
+            continue
         destination = target / filename
         checksum = None
+        checksum_algorithm = None
         if filename.endswith(".jar"):
-            with urllib.request.urlopen(url + ".sha512", timeout=60) as response:
-                checksum = response.read().decode().strip().split()[0].lower()
+            for algorithm in ("sha512", "sha256", "sha1"):
+                try:
+                    with urllib.request.urlopen(url + "." + algorithm, timeout=60) as response:
+                        checksum = response.read().decode().strip().split()[0].lower()
+                        checksum_algorithm = algorithm
+                        break
+                except urllib.error.HTTPError as exc:
+                    if exc.code != 404:
+                        raise
+            if checksum is None:
+                raise ValueError(f"No upstream checksum published for {filename}")
         if destination.exists() and checksum:
             with destination.open("rb") as stream:
-                if hashlib.file_digest(stream, "sha512").hexdigest() == checksum:
+                if hashlib.file_digest(stream, checksum_algorithm).hexdigest() == checksum:
                     print(f"Verified cached {filename}", flush=True)
                     hashes[filename] = {"sha256": hashlib.sha256(destination.read_bytes()).hexdigest(), "url": url}
                     continue
@@ -86,7 +103,7 @@ def main():
                         raise ValueError("Truncated artifact")
                 if checksum:
                     with destination.open("rb") as stream:
-                        if hashlib.file_digest(stream, "sha512").hexdigest() != checksum:
+                        if hashlib.file_digest(stream, checksum_algorithm).hexdigest() != checksum:
                             raise ValueError("Upstream artifact checksum mismatch")
                 break
             except (OSError, ValueError):
@@ -96,7 +113,11 @@ def main():
         with destination.open("rb") as stream:
             hashes[filename] = {"sha256": hashlib.file_digest(stream, "sha256").hexdigest(), "url": url}
         print(f"Verified {filename}", flush=True)
-    (target / "artifacts.json").write_text(json.dumps(hashes, indent=2), encoding="utf-8")
+    # Per-artifact receipts permit independent downloads without manifest write races.
+    for filename, receipt in hashes.items():
+        (target / (filename + ".receipt.json")).write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+    if not args.only:
+        (target / "artifacts.json").write_text(json.dumps(hashes, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from datetime import date, datetime
 from decimal import ROUND_FLOOR, Decimal
 
 
-def allocate_discount(lines: list[dict], discount: int) -> dict[str, int]:
+def allocate_discount(lines: list[dict], discount: int | Decimal) -> dict[str, int | Decimal]:
     valid = [row for row in lines if row["quantity"] > 0]
     total = sum(row["total_price"] for row in valid)
     if discount < 0 or any(row["total_price"] < 0 for row in valid) or discount > total:
@@ -19,11 +19,14 @@ def allocate_discount(lines: list[dict], discount: int) -> dict[str, int]:
         return {row["id"]: 0 for row in valid}
     if len({row["id"] for row in valid}) != len(valid):
         raise ValueError("Duplicate line identity")
-    # Largest remainder, ties by stable line ID; all amounts are integer VND.
+    # Integer VND allocation, stable ties; preserve any source fractional tail on rank 1.
     base = {row["id"]: discount * row["total_price"] // total for row in valid}
     ranking = sorted(valid, key=lambda row: (-(discount * row["total_price"] % total), row["id"]))
-    for row in ranking[:discount - sum(base.values())]:
+    for row in ranking[:int(discount - sum(base.values()))]:
         base[row["id"]] += 1
+    fractional_tail = discount - sum(base.values())
+    if fractional_tail:
+        base[ranking[0]["id"]] += fractional_tail
     return base
 
 

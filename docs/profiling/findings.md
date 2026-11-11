@@ -22,6 +22,7 @@ Chi tiết aggregate/schema được xuất bằng `scripts/profile_sources.py` 
 - SUM(line.total_price) khớp subtotal trên tất cả order; không có order thiếu line.
 - Công thức total_amount khớp GREATEST(0, subtotal + shipping_fee - discount_amount).
 - 622 order discount > subtotal, 4420 line quantity = 0, 4160 order shipping_fee = 0.
+- Kiểm tra bổ sung trong vertical slice: 403 order có discount_amount lẻ phần VND (ví dụ .50), subtotal vẫn nguyên VND. Source money giữ DECIMAL(20,2); fractional remainder không bị truncate khi phân bổ header discount. Đã có runtime source/Spark/Trino reconciliation và 3 regression cases cho chi tiết này.
 - Không phát hiện orphan ở các quan hệ order-customer, line-order, line-product, return-order đã kiểm tra.
 - Các trạng thái thực tế không đồng nghĩa với nhau: delivered/pending = 27473, delivered/failed = 2440. Giữ tiêu chí eligibility đã duyệt và hiển thị exclusion count.
 - Chưa có updated_at trên orders/customers/products/returns. PK/created_at không đủ bắt update trạng thái: MVP dùng full snapshot cho các bảng mutable trong phạm vi dataset, append/merge theo PK cho log bất biến sau khi xác minh.

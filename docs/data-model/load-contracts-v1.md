@@ -43,6 +43,7 @@ Bronze partition theo ingestion day; fact lớn có thể dùng month(order_date
 | Source amount vs target theo cùng eligibility | Exact Decimal; fail block scope |
 | discount>subtotal | Exclude revenue theo BR27, count visible; không block toàn dataset vì lỗi đã được mô tả |
 | quantity=0 | Audit, loại units/sales lines hợp lệ |
+| Source discount có phần lẻ VND | Giữ DECIMAL(20,2); integer allocation theo rank ổn định, fractional tail <1 VND vào rank đầu. Tổng allocation phải khớp source header exact, không truncate FIN02 |
 | phone null/shipping=0/cost>base | Nullable hoặc warning theo đề bài |
 | Marketplace Decimal-vs-source delta -1 VND và khớp float source | Formula warning theo evidence P03; preserve reported net, source-target reconciliation vẫn exact. Mọi mức lệch mới phải review/block |
 | SCD overlaps/multiple current | Block dimension và dependent facts |

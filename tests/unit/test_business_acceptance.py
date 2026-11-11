@@ -3,6 +3,7 @@
 import json
 from copy import deepcopy
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -120,3 +121,16 @@ def test_june_inventory_backfill_is_rejected_by_approved_scope(snapshot_day):
 @pytest.mark.parametrize("snapshot_day", [date(2026, 11, 11), date(2026, 11, 12)])
 def test_inventory_period_gate_accepts_go_live_and_later(snapshot_day):
     require_observed_inventory_period(snapshot_day, date(2026, 11, 11))
+
+
+@pytest.mark.parametrize("amounts,discount,expected", [
+    ([547770], "82165.50", {"0": Decimal("82165.50")}),
+    ([1, 1], "0.50", {"0": Decimal("0.50"), "1": 0}),
+    ([60, 40], "10.50", {"0": Decimal("6.50"), "1": 4}),
+])
+def test_fractional_source_discount_is_conserved_on_stable_remainder_line(amounts, discount, expected):
+    lines = [{"id": str(i), "quantity": 1, "total_price": value} for i, value in enumerate(amounts)]
+    result = allocate_discount(lines, Decimal(discount))
+    assert result == expected
+    assert sum(result.values()) == Decimal(discount)
+    assert allocate_discount(list(reversed(lines)), Decimal(discount)) == result

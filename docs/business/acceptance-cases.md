@@ -24,7 +24,7 @@ Fixture: [business_acceptance.json](../../tests/fixtures/business_acceptance.jso
 | Finance primary theo BR31 | Fixture chọn FIN02=300002 VND; không chọn proxy 265002 VND thay headline |
 | Inventory BR32 | Với go-live giả lập 2026-11-11: June 1/30 bị chặn; Nov 11/12 qua gate thời gian. Đây không phải ngày go-live production được gán sẵn |
 
-Rule version hiện hành 1.1; tổng 20 reference/unit test cases. Inventory period gate chỉ kiểm tra phạm vi ngày, chưa xác minh đã quan sát đúng EOD/cutoff. Test dựng ngược số dư synthetic không cho phép backfill actual June trong MVP.
+Rule version hiện hành 1.1; tổng 23 reference/unit test cases. Ba case mới giữ fractional source discount (single line 82165.50; hai line chia 0.50; tỷ trọng 60/40 chia 10.50): phần dư dưới 1 VND vào rank đầu, integer-input fixtures không đổi. Inventory period gate chỉ kiểm tra phạm vi ngày, chưa xác minh EOD/cutoff. Test dựng ngược số dư synthetic không cho phép backfill actual June trong MVP.
 
 Chạy bằng Python 3.11:
 
