@@ -1,6 +1,8 @@
-# Quy tắc nghiệp vụ v1
+# Quy tắc nghiệp vụ — phiên bản 1.1
 
 Trạng thái: **được người dùng duyệt ngày 2026-11-11 trong hội thoại dự án**. Đây là baseline báo cáo quản trị cho đồ án; không đại diện cho phê duyệt của phòng Finance ngoài dự án.
+
+Phiên bản hiện hành: **1.1**. Sau profiling, người dùng duyệt thêm BR31 và BR32 ngày 2026-11-11. Các quyết định này ưu tiên áp dụng khi khác với BR01 hoặc phạm vi inventory lịch sử trước đó; giữ nguyên nội dung quyết định cũ để truy vết. Xem [biên bản thay đổi](decisions/2026-11-11-finance-inventory.md).
 
 Nguồn tham chiếu: [project requirements](../sources/01_project_requirements.md), [dataset guide](../sources/02_dataset_guide.md). Các giả định phụ thuộc dữ liệu phải được kiểm tra bằng profiling trước khi lập trình Gold.
 
@@ -38,6 +40,8 @@ Nguồn tham chiếu: [project requirements](../sources/01_project_requirements.
 | BR28 | Incomplete publication | Công bố phần nguồn hợp lệ với nhãn thiếu partner/ngày; không điền 0. Reject checksum sai. DQ nghiêm trọng chặn publication phạm vi bị ảnh hưởng. |
 | BR29 | Simulated data | Kafka simulator có `data_origin = simulated`, dùng dashboard demo riêng. Hợp nhất batch/stream chỉ khi có identity/reconciliation chống đếm trùng. |
 | BR30 | Publication cutoff | Trước 08:00, dữ liệu đến hết D-1 theo giờ Việt Nam. Có data_as_of, published_at và completeness từng nguồn. Batch là bản công bố chính thức, streaming là tạm thời. |
+| BR31 | KPI Finance chính sau profiling | Với direct, dùng FIN02 net customer amount sau refund = total_amount - SUM(refund_amount WHERE return.status='refunded') làm KPI Finance chính. FIN03 merchandise less order refunds chỉ là proxy, có nhãn và được phép âm. Không phân bổ refund shipping/product khi nguồn chưa tách. Marketplace giữ FIN05 reported net riêng, so sánh đa kênh dùng FIN10 cùng basis trước refund/commission. Quyết định này thay phần chọn Finance KPI chính trong BR01. |
+| BR32 | Phạm vi inventory sau profiling | MVP dùng current stock và snapshot thực tế từ go-live; chặn backfill EOD tháng 6/2026 từ timestamp nguồn hiện tại. Không tạo lịch sử inventory mô phỏng như lịch sử thật. Go-live là mốc cấu hình của pipeline khi bắt đầu quan sát, không tự đặt bằng source.last_updated hay ngày viết tài liệu. Daily EOD chỉ công bố khi có cutoff hợp lệ. |
 
 ## Kiểm soát thay đổi
 
@@ -47,11 +51,11 @@ Không thay đổi ID quyết định cũ để che lịch sử. Ghi decision m�
 
 Marketplace: sale_price = 100000, quantity_sold = 2, commission_rate = 0.08. Merchandise amount sau platform discount = 200000; net theo công thức floor của nguồn = 184000. Không trừ platform_discount hoặc commission lần nữa khỏi 184000.
 
-Direct: tổng line đã sau item discount = 200000, header discount = 20000, shipping = 15000. Merchandise sau discount = 180000; total_amount = 195000. Nếu có refunded amount = 30000, doanh thu theo quy ước quản trị = 150000. Cần xác minh thành phần refund có bao gồm shipping hay không; nếu nguồn không tách được phải ghi giới hạn, không tự chia.
+Direct: tổng line đã sau item discount = 200000, header discount = 20000, shipping = 15000. Merchandise sau discount = 180000; total_amount = 195000. Nếu có refunded amount = 30000, **Finance KPI chính FIN02 = 165000**. FIN03 = 150000 chỉ là merchandise-less-order-refund proxy. Nguồn không tách refund shipping nên không tự chia hoặc gọi FIN03 là net merchandise chính xác.
 
 ## Các chi tiết phải profiling/làm rõ trước Gold
 
-- Semantics refund có bao gồm shipping; tổng refund vượt merchandise/total phải được phát hiện, không tự clamp.
+- Tổng refund vượt merchandise/total phải được phát hiện; theo BR31, vượt merchandise không tự động là lỗi vì refund có thể gồm shipping, không tự clamp. Vượt customer total vẫn cần DQ review.
 - Khóa dòng marketplace và khả năng nhiều return trên một order.
 - Trạng thái payment/order thực có, timestamp timezone, inventory transaction semantics và warehouse history.
 - Chưa có lịch sử status/refund trước go-live: chỉ biết trạng thái từ snapshot đã quan sát, không dựng lịch sử giả.

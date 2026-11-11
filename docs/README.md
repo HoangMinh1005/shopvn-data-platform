@@ -3,7 +3,7 @@
 Thứ tự áp dụng khi có khác biệt:
 
 1. [Yêu cầu dự án gốc](sources/01_project_requirements.md): yêu cầu bắt buộc của đề bài.
-2. [Business rules v1](business/business-rules-v1.md): quyết định nghiệp vụ được người dùng duyệt ngày 2026-11-11.
+2. [Business rules, phiên bản hiện hành 1.1](business/business-rules-v1.md): gồm BR01–BR30 và [BR31/BR32 bổ sung đã duyệt](business/decisions/2026-11-11-finance-inventory.md) ngày 2026-11-11.
 3. [Architecture baseline](architecture/baseline-v1.md) và [model baseline](data-model/README.md): định hướng triển khai hiện hành, có ghi rõ phần chưa kiểm chứng.
 4. Các tài liệu `legacy/`: lịch sử phương án, không phải hợp đồng triển khai hiện hành.
 

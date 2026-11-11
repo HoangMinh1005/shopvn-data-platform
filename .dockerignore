@@ -1,0 +1,10 @@
+# Explicit allowlist for readiness builds; never send .env or source data to Docker.
+**
+!infra/
+!infra/platform/
+!infra/platform/spike/
+!infra/platform/spike/*.Dockerfile
+!runtime/
+!runtime/spike-build/
+!runtime/spike-build/*.jar
+!runtime/spike-build/minio-source.tar.gz

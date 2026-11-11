@@ -21,3 +21,11 @@ jobs:
         run: python scripts/check_repository.py
       - name: Validate source Compose without starting services
         run: docker compose --env-file .env.example -f infra/sources/docker-compose.yml config --quiet
+      - name: Install preparation tools
+        run: python -m pip install -r requirements-preparation.txt
+      - name: Lint preparation and reference code
+        run: ruff check scripts src tests
+      - name: Run synthetic business acceptance tests
+        run: python -m pytest -q
+      - name: Validate isolated spike Compose without starting services
+        run: docker compose --env-file .env.example -f infra/platform/spike/compose.yml config --quiet

@@ -1,6 +1,6 @@
 # Data model hiện hành
 
-Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Iceberg trên MinIO. [Business rules v1](../business/business-rules-v1.md) là hợp đồng tính KPI. Chưa có physical data dictionary/ERD cuối đã đối chiếu dữ liệu thực.
+Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Iceberg trên MinIO. [Business rules v1.1](../business/business-rules-v1.md) và [KPI contracts](../business/kpi-contracts-v1.md) điều khiển KPI. Đã bổ sung [data dictionary](data-dictionary-v1.md), [load contracts](load-contracts-v1.md) và [ERD Mermaid](gold-erd.mmd) sau profiling nguồn. [BR31/BR32 đã duyệt](../business/decisions/2026-11-11-finance-inventory.md) chốt FIN02 là Direct Finance primary, inventory chỉ current stock và snapshot từ go-live. Giới hạn refund composition và June inventory history vẫn được giữ theo [findings](../profiling/findings.md), không bị coi là đã sửa nguồn.
 
 ## Phân lớp
 

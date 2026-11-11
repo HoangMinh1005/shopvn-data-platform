@@ -1,0 +1,70 @@
+name: shopvn-readiness
+services:
+  catalog:
+    image: postgres:16@sha256:2586e2a95d1c9b31cb2967feb562948f7d364854453d703039b6efa45fe48417
+    environment:
+      POSTGRES_DB: iceberg_catalog
+      POSTGRES_USER: iceberg
+      POSTGRES_PASSWORD: ${SPIKE_DB_PASSWORD:?Set SPIKE_DB_PASSWORD}
+    volumes:
+      - catalog-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U iceberg -d iceberg_catalog']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    mem_limit: 256m
+  minio:
+    image: shopvn-readiness-minio:9e49d5e7
+    build:
+      context: ../../..
+      dockerfile: infra/platform/spike/minio.Dockerfile
+    environment:
+      MINIO_ROOT_USER: ${SPIKE_MINIO_USER:?Set SPIKE_MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set SPIKE_MINIO_PASSWORD}
+    ports:
+      - '127.0.0.1:19000:9000'
+    # Named volume initially owned by root; readiness is a local isolated demo.
+    user: '0:0'
+    volumes:
+      - object-data:/data
+    mem_limit: 512m
+  trino:
+    image: trinodb/trino:484@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f
+    environment:
+      SPIKE_DB_PASSWORD: ${SPIKE_DB_PASSWORD:?Set SPIKE_DB_PASSWORD}
+      SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set SPIKE_MINIO_USER}
+      SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set SPIKE_MINIO_PASSWORD}
+    ports:
+      - '127.0.0.1:18080:8080'
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/jvm.config:/etc/trino/jvm.config:ro
+    depends_on:
+      catalog:
+        condition: service_healthy
+    mem_limit: 1536m
+  spark:
+    image: shopvn-readiness-spark:3.5.9-iceberg1.12.0
+    build:
+      context: ../../..
+      dockerfile: infra/platform/spike/spark.Dockerfile
+    environment:
+      SPIKE_DB_PASSWORD: ${SPIKE_DB_PASSWORD:?Set SPIKE_DB_PASSWORD}
+      SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set SPIKE_MINIO_USER}
+      SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set SPIKE_MINIO_PASSWORD}
+      SPARK_LOCAL_IP: 127.0.0.1
+      PYTHONPATH: /workspace/src
+    volumes:
+      - ../../../scripts:/workspace/scripts:ro
+      - ../../../src:/workspace/src:ro
+      - ../../../runtime:/workspace/runtime
+    entrypoint: [/opt/spark/bin/spark-submit]
+    command: [--master, 'local[2]', --driver-memory, 1g, /workspace/scripts/spike_spark.py]
+    depends_on:
+      catalog:
+        condition: service_healthy
+    mem_limit: 3g
+volumes:
+  catalog-data:
+  object-data:

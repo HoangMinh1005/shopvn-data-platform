@@ -1,0 +1,65 @@
+{
+  "observed_at_utc": "2026-11-11T13:55:55.269741+00:00",
+  "runs": [
+    {
+      "observed_at_utc": "2026-11-11T13:56:04.118078+00:00",
+      "spark_version": "3.5.9",
+      "java_version": "17.0.21",
+      "scala_version": "2.12.18",
+      "row_count": 2,
+      "total_amount": "325.00",
+      "schema_addition": true,
+      "jar_sha256": {
+        "iceberg-spark-runtime-3.5_2.12-1.12.0.jar": "8dd8c90e54ed1a20f2461309d047a255ee56382eb7c0a46162b27a4936fd86dc",
+        "iceberg-aws-bundle-1.12.0.jar": "dd7e49ffa4ac9b215bed846581991259e3aec9bb2fa08d6cec029c46cd66d957",
+        "postgresql-42.7.8.jar": "2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7"
+      },
+      "run": 1
+    },
+    {
+      "observed_at_utc": "2026-11-11T13:56:14.164797+00:00",
+      "spark_version": "3.5.9",
+      "java_version": "17.0.21",
+      "scala_version": "2.12.18",
+      "row_count": 2,
+      "total_amount": "325.00",
+      "schema_addition": true,
+      "jar_sha256": {
+        "iceberg-spark-runtime-3.5_2.12-1.12.0.jar": "8dd8c90e54ed1a20f2461309d047a255ee56382eb7c0a46162b27a4936fd86dc",
+        "iceberg-aws-bundle-1.12.0.jar": "dd7e49ffa4ac9b215bed846581991259e3aec9bb2fa08d6cec029c46cd66d957",
+        "postgresql-42.7.8.jar": "2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7"
+      },
+      "run": 2
+    },
+    {
+      "observed_at_utc": "2026-11-11T13:56:22.992817+00:00",
+      "spark_version": "3.5.9",
+      "java_version": "17.0.21",
+      "scala_version": "2.12.18",
+      "row_count": 2,
+      "total_amount": "325.00",
+      "schema_addition": true,
+      "jar_sha256": {
+        "iceberg-spark-runtime-3.5_2.12-1.12.0.jar": "8dd8c90e54ed1a20f2461309d047a255ee56382eb7c0a46162b27a4936fd86dc",
+        "iceberg-aws-bundle-1.12.0.jar": "dd7e49ffa4ac9b215bed846581991259e3aec9bb2fa08d6cec029c46cd66d957",
+        "postgresql-42.7.8.jar": "2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7"
+      },
+      "run": 3
+    }
+  ],
+  "status": "passed",
+  "trino_before_restart": [
+    [
+      2,
+      "325.00",
+      2
+    ]
+  ],
+  "trino_after_restart": [
+    [
+      2,
+      "325.00",
+      2
+    ]
+  ]
+}

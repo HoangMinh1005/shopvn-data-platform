@@ -1,0 +1,64 @@
+{
+  "scope": "Verified core only; Airflow/Kafka/Superset runtime not yet validated",
+  "images": {
+    "spark": {
+      "reference": "shopvn-readiness-spark:3.5.9-iceberg1.12.0",
+      "image_id": "sha256:c410e7962747d408ed79df03154c47493f6abc8e2dfae2c9fc13fe6ca4916b20",
+      "repo_digests": [
+        "shopvn-readiness-spark@sha256:c410e7962747d408ed79df03154c47493f6abc8e2dfae2c9fc13fe6ca4916b20"
+      ],
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "minio": {
+      "reference": "shopvn-readiness-minio:9e49d5e7",
+      "image_id": "sha256:33d712a4494d120030831b6360bcf60531e8b3e1ce9791c8923db5e1171f8d7e",
+      "repo_digests": [
+        "shopvn-readiness-minio@sha256:33d712a4494d120030831b6360bcf60531e8b3e1ce9791c8923db5e1171f8d7e"
+      ],
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "trino": {
+      "reference": "trinodb/trino:484",
+      "image_id": "sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "repo_digests": [
+        "trinodb/trino@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f"
+      ],
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "catalog": {
+      "reference": "postgres:16@sha256:2586e2a95d1c9b31cb2967feb562948f7d364854453d703039b6efa45fe48417",
+      "image_id": "sha256:2586e2a95d1c9b31cb2967feb562948f7d364854453d703039b6efa45fe48417",
+      "repo_digests": [
+        "postgres@sha256:2586e2a95d1c9b31cb2967feb562948f7d364854453d703039b6efa45fe48417"
+      ],
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "python_base": {
+      "reference": "python:3.11.15-slim-bookworm",
+      "image_id": "sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3",
+      "repo_digests": [
+        "python@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3"
+      ],
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "jar_sha256": {
+    "iceberg-aws-bundle-1.12.0.jar": "dd7e49ffa4ac9b215bed846581991259e3aec9bb2fa08d6cec029c46cd66d957",
+    "iceberg-spark-runtime-3.5_2.12-1.12.0.jar": "8dd8c90e54ed1a20f2461309d047a255ee56382eb7c0a46162b27a4936fd86dc",
+    "postgresql-42.7.8.jar": "2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7"
+  },
+  "minio_source_commit": "9e49d5e7a648f00e26f2246f4dc28e6b07f8c84a",
+  "minio_source_archive_sha256": "45521908307306e925c98d629e1c17d78c8b72b6ee242b1bfb1409f7d8ee5841",
+  "spark_runtime": {
+    "spark": "3.5.9",
+    "scala": "2.12.18",
+    "python": "3.11.15",
+    "java": "17.0.21",
+    "debian_openjdk_package": "17.0.21+9-1~deb12u1"
+  }
+}

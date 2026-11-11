@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử
 
-Chưa có test xử lý dữ liệu; CI hiện chỉ kiểm tra repository và cú pháp Compose. Không xem CI xanh là bằng chứng pipeline/KPI đã đúng.
+Đã có 23 unit/reference checks cho [bộ số giả lập](fixtures/business_acceptance.json), gồm BR31/BR32 và fractional source discount. Runtime integration runners cho storage và direct Finance đã chạy 3 fresh Spark processes, nguồn/Spark/Trino đối soát khớp; xem [evidence](../docs/verification/README.md). CI hiện chỉ chạy repository checks, lint, synthetic tests và Compose validation, chưa tự chạy integration stack hoặc nguồn thật.
 
 - `fixtures/`: dữ liệu nhỏ được giả lập và kết quả tính tay.
 - `unit/`: transformation/business rule tests khi có implementation.
