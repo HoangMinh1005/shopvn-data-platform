@@ -14,6 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import psycopg
 from prometheus_client import CONTENT_TYPE_LATEST, Gauge, generate_latest
 
+from shopvn.contracts.inventory import eod_publication_missing
 from shopvn.orchestration import ops
 from shopvn.orchestration.deadline import deadline_missed
 
@@ -46,6 +47,24 @@ LAST_POLL = Gauge(
     "shopvn_monitor_last_poll_timestamp_seconds", "Last successful operational DB poll"
 )
 STATUS = {}
+INV_OBSERVED = Gauge(
+    "shopvn_inventory_observed_timestamp_seconds", "Latest actual source stock observation"
+)
+INV_QTY = Gauge(
+    "shopvn_inventory_stock_qty", "Current observed total stock; do not sum across days"
+)
+INV_EOD = Gauge(
+    "shopvn_inventory_eod_date_timestamp_seconds",
+    "Last actual accepted EOD business date; NaN when none",
+)
+INV_LAG = Gauge(
+    "shopvn_inventory_capture_lag_seconds",
+    "Lag from midnight boundary; NaN for current-only capture",
+)
+INV_FAILED = Gauge("shopvn_inventory_failed", "Latest inventory workflow failed")
+INV_MISSING = Gauge(
+    "shopvn_inventory_eod_missing", "Yesterday EOD absent after 00:10 VN, only since actual go-live"
+)
 
 
 def http_health(url):
@@ -113,9 +132,38 @@ def poll():
                 alerts = conn.execute(
                     "SELECT kind,count(*) n FROM ops.alert WHERE resolved_at IS NULL GROUP BY kind"
                 ).fetchall()
+                inventory = conn.execute(
+                    "SELECT * FROM ops.inventory_run ORDER BY started_at DESC LIMIT 1"
+                ).fetchone()
+                inventory_current = conn.execute(
+                    "SELECT * FROM ops.inventory_run WHERE current_published=true ORDER BY observed_at DESC,finished_at DESC LIMIT 1"
+                ).fetchone()
+                last_eod = conn.execute(
+                    "SELECT max(business_date) AS last_business_date FROM ops.inventory_run WHERE status='success' AND eod_published=true"
+                ).fetchone()["last_business_date"]
             HEALTH.labels("platform_postgres").set(1)
             values["platform_postgres"] = True
             now = datetime.now(timezone.utc)
+            INV_MISSING.set(
+                eod_publication_missing(
+                    now, date.fromisoformat(os.environ["INVENTORY_GO_LIVE_DATE"]), last_eod
+                )
+            )
+            INV_EOD.set(
+                datetime.combine(last_eod, datetime.min.time(), timezone.utc).timestamp()
+                if last_eod
+                else float("nan")
+            )
+            if inventory:
+                INV_FAILED.set(inventory["status"] == "failed")
+                INV_LAG.set(
+                    inventory["capture_lag_seconds"]
+                    if inventory["capture_lag_seconds"] is not None
+                    else float("nan")
+                )
+            if inventory_current:
+                INV_OBSERVED.set(inventory_current["observed_at"].timestamp())
+                INV_QTY.set(inventory_current["stock_qty"])
             LAST_POLL.set(now.timestamp())
             DEADLINE.set(
                 deadline_missed(
@@ -153,6 +201,9 @@ def poll():
             STATUS = {
                 "services": values,
                 "latest_run": latest,
+                "inventory": inventory,
+                "inventory_current": inventory_current,
+                "last_eod_business_date": last_eod,
                 "open_alerts": alerts,
                 "last_poll": now.isoformat(),
             }

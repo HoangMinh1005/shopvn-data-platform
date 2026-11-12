@@ -9,7 +9,7 @@ from pyspark.sql import functions as F
 from shopvn.common.iceberg import merge_fact, replace_table
 from shopvn.common.spark_runtime import acquire_writer_lock, session
 from shopvn.config import ProjectPaths
-from shopvn.contracts.direct import RULE_VERSION, SCHEMAS
+from shopvn.contracts.direct import CONTRACT_VERSION, RULE_VERSION, SCHEMAS
 from shopvn.marts.finance import build_fin02
 from shopvn.quality.direct import (
     validate_allocated_lines,
@@ -17,6 +17,7 @@ from shopvn.quality.direct import (
     validate_silver,
 )
 from shopvn.quality.finance import assert_fin02_matches, expected_fin02
+from shopvn.quality.temporal import assert_observation_order
 from shopvn.transformations.bronze.direct import load_table
 from shopvn.transformations.gold.dimensions import build_dimensions
 from shopvn.transformations.gold.orders import build_order_fact, enrich_orders
@@ -37,9 +38,13 @@ def run(snapshot_id, *, candidate_name=None, result_path=None, publication_id=No
     manifest = json.loads(
         (paths.landing / snapshot_id / "manifest.json").read_text(encoding="utf-8")
     )
-    if set(manifest["tables"]) != set(SCHEMAS) or manifest["rule_version"] != RULE_VERSION:
+    if (
+        set(manifest["tables"]) != set(SCHEMAS)
+        or manifest["rule_version"] != RULE_VERSION
+        or manifest.get("contract_version") != CONTRACT_VERSION
+    ):
         raise ValueError(
-            "Extract a snapshot with all six source tables and the current rule version"
+            "Extract a snapshot with all nine source tables and the current rule version"
         )
     observed_at = manifest["observed_at_utc"]
     result_file = paths.result_file(result_path)
@@ -55,6 +60,7 @@ def run(snapshot_id, *, candidate_name=None, result_path=None, publication_id=No
     lock = None
     try:
         lock = acquire_writer_lock(spark)
+        assert_observation_order(spark, observed_at)
         for namespace in ("bronze", "silver", "gold", "analytics", "staging"):
             spark.sql(f"CREATE NAMESPACE IF NOT EXISTS shopvn.{namespace}")
         bronze = {
@@ -63,7 +69,7 @@ def run(snapshot_id, *, candidate_name=None, result_path=None, publication_id=No
         }
         frames = materialize(spark, bronze, stage)
         spark.catalog.clearCache()
-        validate_silver(frames)
+        validate_silver(frames, observed_at)
         customer_ref, customers, products = build_dimensions(
             spark, frames, observed_at, stage, paths.hmac_key
         )

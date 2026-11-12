@@ -1,0 +1,236 @@
+{
+  "status": "passed",
+  "verified_at_utc": "2026-11-12T06:05:52.724199+00:00",
+  "scope": "Stage 1: 9 PostgreSQL tables, observed-time SCD2/day-asof, actual current/EOD stock; no historic stock reconstruction",
+  "unit_tests": {
+    "tests": 84,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "temporal_spark_tests": {
+    "status": "passed",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Synthetic data in isolated shopvn.stage1_tests; not actual inventory history"
+  },
+  "base_spark_tests": {
+    "status": "passed",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  "airflow_clock_tests": {
+    "status": "passed",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Actual Airflow runtime Pendulum types; no source or metadata writes"
+  },
+  "packaging": {
+    "isolated_wheel_job_imports_and_sql_resource": "passed",
+    "wheel_sha256": "76e584293b790c3ce77f0304637a6ed8bf1fed9cd758ad0a96799ad3c13aeade"
+  },
+  "source": {
+    "snapshot_id": "5cc56dd57a61483f99be39f60b5b0457",
+    "contract_version": 2,
+    "observed_at_utc": "2026-11-11T16:46:59.825335+00:00",
+    "transaction": {
+      "isolation": "repeatable read",
+      "read_only": "on",
+      "snapshot": "863:863:",
+      "observed_at": "2026-11-11 16:46:59.825335+00:00"
+    },
+    "counts": {
+      "orders": 211806,
+      "order_items": 444142,
+      "returns": 4215,
+      "customers": 50000,
+      "products": 2000,
+      "vouchers": 200,
+      "inventory": 2000,
+      "inventory_transactions": 439722,
+      "product_reviews": 41226
+    },
+    "review_comment_exported": false
+  },
+  "finance": {
+    "fin02_total_vnd": "1648602104364.00",
+    "replays": 3,
+    "replay_fin02_totals": [
+      "1648602104364.00",
+      "1648602104364.00",
+      "1648602104364.00"
+    ],
+    "dq_block_kept_certified_snapshot": {
+      "before_snapshot_id": 1234675708767252518,
+      "after_snapshot_id": 1234675708767252518
+    },
+    "recovery": {
+      "dag_run_id": "manual__verify_recovery_20261111T164656374127",
+      "state": "success",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "extract_snapshot",
+          "success",
+          1
+        ],
+        [
+          "transform_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "success",
+          1
+        ],
+        [
+          "verify_and_finish",
+          "success",
+          1
+        ],
+        [
+          "finalize",
+          "success",
+          1
+        ],
+        [
+          "validate_candidate",
+          "success",
+          2
+        ]
+      ]
+    }
+  },
+  "inventory": {
+    "policy_columns": [
+      "go_live_date",
+      "window_seconds",
+      "policy_version",
+      "first_observed_at"
+    ],
+    "policy": [
+      [
+        "2026-11-11",
+        60,
+        "INV-CUTOFF-v1",
+        "2026-11-11 16:31:58.314901 UTC"
+      ]
+    ],
+    "scheduled_dag_run": {
+      "run_key": "d7135da936019923fb26a577",
+      "dag_run_id": "scheduled__2026-11-11T17:00:00+00:00",
+      "mode": "eod",
+      "business_date": "2026-11-11",
+      "snapshot_id": "1f54077fb2284b15984db7eafaa1d397",
+      "observed_at": "2026-11-11 17:00:02.153998+00:00",
+      "cutoff_at": "2026-11-11 17:00:00+00:00",
+      "capture_lag_seconds": 2.153998,
+      "eod_eligible": true,
+      "status": "success",
+      "rows": 2000,
+      "stock_qty": 5053681,
+      "current_published": true,
+      "eod_published": true,
+      "started_at": "2026-11-11 17:00:01.331330+00:00",
+      "finished_at": "2026-11-11 17:00:27.111961+00:00"
+    },
+    "current_stock": [
+      2000,
+      5053681,
+      "2026-11-11 17:00:02.153998 UTC"
+    ],
+    "daily_columns": [
+      "business_date",
+      "rows",
+      "stock_qty",
+      "min_capture_lag_seconds",
+      "max_capture_lag_seconds",
+      "observed_at_utc",
+      "cutoff_at_utc"
+    ],
+    "daily": [
+      [
+        "2026-11-11",
+        2000,
+        5053681,
+        2.153998,
+        2.153998,
+        "2026-11-11 17:00:02.153998 UTC",
+        "2026-11-11 17:00:00.000000 UTC"
+      ]
+    ],
+    "actual_replay": {
+      "status": "passed",
+      "snapshot_id": "1f54077fb2284b15984db7eafaa1d397",
+      "business_date": "2026-11-11",
+      "before_iceberg_snapshot": 3610694124416122032,
+      "after_iceberg_snapshot": 3610694124416122032,
+      "rows": 2000,
+      "stock_qty": 5053681,
+      "capture_lag_seconds": 2.153998
+    }
+  },
+  "services": {
+    "minio": true,
+    "trino": true,
+    "airflow_api": true,
+    "airflow_scheduler": true,
+    "airflow_dag_processor": true,
+    "airflow_metadatabase": true,
+    "source_postgres": false,
+    "platform_postgres": true
+  },
+  "runtime_health_at_export": {
+    "all_observed_components_healthy": false,
+    "latest_finance_run": {
+      "run_key": "5fd5ab113442f0a078aa8b47",
+      "dag_id": "shopvn_direct_finance",
+      "dag_run_id": "scheduled__2026-11-11T20:00:00+00:00",
+      "run_type": "scheduled",
+      "business_date": "2026-11-10",
+      "status": "failed",
+      "stage": "failed",
+      "started_at": "2026-11-12 05:56:51.859744+00:00",
+      "finished_at": "2026-11-12 05:58:31.173463+00:00",
+      "snapshot_id": "31ffe4679aa048a4ba00713d0527ce6b",
+      "candidate_snapshot_id": null,
+      "source_amount": null,
+      "candidate_amount": null,
+      "amount_delta": null,
+      "dq_passed": null,
+      "source_min_date": "2026-06-01",
+      "source_max_date": "2026-06-30",
+      "published": false,
+      "error_class": "RuntimeError",
+      "attempts": 3,
+      "rule_version": "1.1"
+    },
+    "note": "Acceptance PASS records completed checks; it does not declare current service health or current-month Finance freshness green"
+  },
+  "open_alerts": [
+    {
+      "kind": "pipeline_failed",
+      "n": 1
+    },
+    {
+      "kind": "task_retry",
+      "n": 2
+    }
+  ],
+  "limits": [
+    "SCD2 is observed-time; date-only order lookup is not exact purchase-time tier/cost",
+    "EOD is an actual observation within an approved 60s window, not exact stock at 00:00",
+    "June stock backfill remains blocked",
+    "Historical apply of stale Finance snapshots is blocked; use fresh source snapshots for restatement",
+    "API/SFTP/Kafka/Superset remain outside Stage 1",
+    "Scheduled Finance requires current source coverage; the supplied orders only cover June 2026"
+  ]
+}

@@ -54,6 +54,7 @@ services:
       SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set SPIKE_MINIO_USER}
       SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set SPIKE_MINIO_PASSWORD}
       SPARK_LOCAL_IP: 127.0.0.1
+      INVENTORY_GO_LIVE_DATE: ${INVENTORY_GO_LIVE_DATE:-}
       PYTHONPATH: /workspace/src
     volumes:
       - ../../../scripts:/workspace/scripts:ro

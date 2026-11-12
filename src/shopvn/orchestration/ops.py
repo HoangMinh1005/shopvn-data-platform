@@ -23,11 +23,18 @@ CREATE TABLE IF NOT EXISTS ops.alert (
  severity text NOT NULL, message text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(),
  resolved_at timestamptz, resolved_by_run_key text
 );
+CREATE TABLE IF NOT EXISTS ops.inventory_run (
+ run_key text PRIMARY KEY, dag_run_id text NOT NULL, mode text NOT NULL,
+ business_date date, snapshot_id text, observed_at timestamptz, cutoff_at timestamptz,
+ capture_lag_seconds double precision, eod_eligible boolean, status text NOT NULL,
+ rows bigint, stock_qty bigint, current_published boolean, eod_published boolean,
+ started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz
+);
 """
 
 
-def run_key(run_id: str) -> str:
-    return hashlib.sha256(("shopvn_direct_finance:" + run_id).encode()).hexdigest()[:24]
+def run_key(run_id: str, dag_id="shopvn_direct_finance") -> str:
+    return hashlib.sha256((dag_id + ":" + run_id).encode()).hexdigest()[:24]
 
 
 @contextmanager

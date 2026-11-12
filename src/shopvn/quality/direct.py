@@ -5,8 +5,17 @@ from pyspark.sql import functions as F
 from shopvn.quality.spark import fail_if
 
 
-def validate_silver(frames):
+def validate_silver(frames, observed_at=None):
     orders, lines = frames["orders"], frames["order_items"]
+    if observed_at:
+        fail_if(
+            orders,
+            F.col("order_date")
+            > F.to_date(
+                F.from_utc_timestamp(F.to_timestamp(F.lit(observed_at)), "Asia/Ho_Chi_Minh")
+            ),
+            "Future business date is not observable yet",
+        )
     fail_if(lines, (F.col("quantity") < 0) | F.col("quantity").isNull(), "Invalid quantity")
     fail_if(
         lines,
@@ -28,6 +37,23 @@ def validate_silver(frames):
         ),
         "Source total mismatch",
     )
+    if "inventory" in frames:
+        fail_if(
+            frames["inventory"],
+            F.col("stock_qty").isNull() | (F.col("stock_qty") < 0),
+            "Invalid inventory stock",
+        )
+        for name in ("inventory", "inventory_transactions", "product_reviews"):
+            if name in frames:
+                if (
+                    frames[name]
+                    .select("product_id")
+                    .distinct()
+                    .join(frames["products"].select("product_id"), "product_id", "left_anti")
+                    .limit(1)
+                    .count()
+                ):
+                    raise ValueError("Unknown product in " + name)
 
 
 def validate_allocated_lines(order_fact, line_fact):

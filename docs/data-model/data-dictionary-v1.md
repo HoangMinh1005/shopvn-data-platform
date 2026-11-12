@@ -119,7 +119,7 @@ Không tự tạo warehouse name/type/province hoặc government geography codes
 | customer_key, channel_key, voucher_key | SK! FK | Customer fallback có nhãn, source channel, voucher hoặc unknown 0 |
 | order_date_key | DK! FK | orders.order_date |
 | order_status, payment_status, payment_method | STRING! | Từng field nguồn |
-| dimension_match_basis | STRING! | as_of_observed / initial_snapshot_fallback / unknown |
+| dimension_match_basis | STRING! | observed_day_asof / initial_snapshot_fallback / unknown; lookup customer theo business key + order_date, không exact purchase-time |
 | currency_code | STRING! | VND |
 | subtotal_amount | M! | orders.subtotal, đã sau item discounts |
 | header_discount_amount | M! | orders.discount_amount |
@@ -143,7 +143,7 @@ Không có payment_date trong nguồn; chưa tạo payment_date_key. Không có 
 | source_order_id | STRING! | orders.order_id hoặc external_order_id, không cross-join hai hệ thống |
 | source_line_id | STRING! NK theo nguồn | Direct item_id; marketplace canonical(partner, external_order_id, shopvn_product_id), reject conflict |
 | product_key, customer_key, channel_key, voucher_key | SK! FK | Conformed lookups; marketplace customer/voucher = 0 khi không có nguồn |
-| dimension_match_basis | STRING! | As-of/fallback, như fact_order |
+| dimension_match_basis | STRING! | Customer basis như fact_order; runtime có customer_dimension_match_basis và product_dimension_match_basis riêng cho hai lookup |
 | order_date_key | DK! FK | Source order_date |
 | scheduled_settlement_date_key | DK! FK | Marketplace settlement_date, direct = 0 |
 | currency_code | STRING! | VND |
@@ -226,11 +226,14 @@ Không tự gán warehouse/cost lịch sử. Transaction vẫn audit được nh
 | product_key, warehouse_key | SK! FK / PK thành phần | Tại snapshot quan sát; inventory hiện 1:1 product |
 | stock_qty | BIGINT! | inventory.stock_qty |
 | source_last_updated | TS? | inventory.last_updated |
-| snapshot_cutoff_at | TS! | Cutoff thực tế của snapshot |
-| snapshot_method | STRING! | observed_eod; current snapshot giữa ngày ở Silver, reconstructed/simulated không thuộc actual daily snapshot MVP BR32 |
-| history_reliable | BOOLEAN! | Phương pháp và nguồn có đủ business time |
+| snapshot_date | DATE! | Business EOD ngày D; cutoff là 00:00 ngày D+1 theo Việt Nam |
+| snapshot_cutoff_at | TS! | Cutoff 00:00 VN, lưu UTC; không phải lúc Spark kết thúc |
+| observed_at | TS! | Thời điểm transaction snapshot nguồn thật được quan sát |
+| capture_lag_seconds | DOUBLE! | observed_at-cutoff, chỉ chấp nhận 0 <= lag < 60 |
+| snapshot_method | STRING! | observed_eod_cutoff_window; là quan sát gần cutoff, không exact stock tại 00:00 |
+| policy_version | STRING! | INV-CUTOFF-v1; go-live/window được persist immutable tại ops.inventory_policy |
 
-Nếu chỉ capture giữa ngày, lưu current snapshot riêng ở Silver; không gọi là EOD. Không cộng stock qua nhiều ngày. reserved/available/in_transit/value chưa có nguồn đủ.
+Nếu chỉ capture giữa ngày, giữ Silver và công bố riêng analytics.current_stock (grain product/warehouse), không gọi là EOD. Current stock có observed_at, source_last_updated TIMESTAMP_NTZ, snapshot lineage và source data_origin. First accepted EOD không bị ghi đè khi replay; payload khác phải block. Không cộng stock qua nhiều ngày. reserved/available/in_transit/value chưa có nguồn đủ. Ngoại lệ June stock history vẫn giữ nguyên.
 
 ## fact_product_review — một direct review
 

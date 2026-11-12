@@ -8,6 +8,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from shopvn.clients.trino import trino_query
+from shopvn.common.time import utc_instant
 from shopvn.config import ProjectPaths
 from shopvn.ingestion.postgres import extract
 from shopvn.orchestration import ops
@@ -22,7 +23,9 @@ def initialize(**context):
     clock = context.get("logical_date") or datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     business_date = (
         configured
-        or (clock.astimezone(ZoneInfo("Asia/Ho_Chi_Minh")) - timedelta(days=1)).date().isoformat()
+        or (
+            utc_instant(clock).astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date() - timedelta(days=1)
+        ).isoformat()
     )
     datetime.strptime(business_date, "%Y-%m-%d")
     run_type = getattr(dag_run.run_type, "value", dag_run.run_type)

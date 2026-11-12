@@ -17,4 +17,4 @@ Code hiện hành theo [bản đồ cấu trúc](../../docs/architecture/code-st
 | monitoring | Exporter Prometheus và service health |
 | quality | Data checks, exact Decimal reconciliation, acceptance references |
 
-Không import từ scripts/. CLI wrappers ở scripts/ chỉ giữ tương thích lệnh cũ; application logic ở package này. Kafka/simulator, API/SFTP ingestion và complete event-time SCD2 chưa triển khai. Không tạo package rỗng cho phần chưa có code.
+Không import từ scripts/. CLI wrappers ở scripts/ chỉ giữ tương thích lệnh cũ; application logic ở package này. Chặng 1 đã có observed-time SCD2/day-as-of và actual inventory current/EOD; không tương đương complete source event-time history. Kafka/simulator và API/SFTP ingestion chưa triển khai. Không tạo package rỗng cho phần chưa có code.

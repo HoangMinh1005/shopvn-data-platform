@@ -44,6 +44,17 @@ Core spike, direct Finance và Airflow/monitoring đã có [bằng chứng thự
 
 ## Luồng triển khai đầu tiên
 
-Đã triển khai direct orders + order_items + returns -> Bronze/Silver -> fact_order + fact_sales_line + fact_return -> DQ/source reconciliation -> mart FIN02 -> Trino -> biểu đồ, được Airflow điều phối và Prometheus/Grafana giám sát. Bước tiếp theo: chuẩn bị nguồn giả lập cập nhật và chọn slice marketplace/Logistics/inventory/Kafka theo phạm vi đã duyệt; chưa tự triển khai các phần này.
+Đã triển khai direct orders + order_items + returns -> Bronze/Silver -> fact_order + fact_sales_line + fact_return -> DQ/source reconciliation -> mart FIN02 -> Trino -> biểu đồ, được Airflow điều phối và Prometheus/Grafana giám sát.
+
+## Chặng 1 MVP — hoàn thành ngày 12/11/2026
+
+- [x] Full PostgreSQL extraction 9 bảng; inventory, transactions và reviews vào Bronze/Silver, không export review comment.
+- [x] SCD2 observed-time customer/product; day-as-of joins cho orders sau go-live; chặn overlap, nhiều current, stale apply và same-clock conflicts.
+- [x] Warehouse mapping, current stock đối soát nguồn và actual EOD từ go-live 11/11, không dựng lại June stock.
+- [x] DAG inventory riêng lúc 00:00 VN; cửa sổ 60 giây được duyệt; audit, Trino verification, missing/failed alerts và Grafana.
+- [x] Actual scheduled EOD ngày 11/11: capture 00:00:02,154 ngày 12/11 VN; replay giữ nguyên Iceberg daily snapshot.
+- [x] 84 unit tests, 19 Spark cases, 3 Airflow clock checks, 3 Finance process replays, DQ failure/recovery; FIN02 không đổi.
+
+Chi tiết: [runbook chặng 1](../runbooks/stage1-postgres-inventory.md), [bằng chứng aggregate](../verification/stage1.json). Stage 1 không triển khai Gold transaction/review marts, Kafka, SFTP/API hoặc Superset. Bước tiếp theo là simulator/Kafka và kiểm chứng streaming theo scope MVP đã duyệt; không cần HA/retention/full backup trước khi bắt đầu chặng đó, nhưng phải hoàn thiện trước vận hành dài hạn theo mức rủi ro.
 
 Definition of Done phải có cả kết quả đúng, khả năng chạy lại, lỗi nguồn được xử lý và visibility trên dashboard/log.

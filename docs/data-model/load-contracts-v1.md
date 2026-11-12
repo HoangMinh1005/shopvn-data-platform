@@ -27,7 +27,7 @@ Rerun cùng input: cùng business keys/measure phải không đổi; loaded_at/r
 | dim_voucher/geography/warehouse | Type1/append master mapping cho thuộc tính hiện quan sát; không khẳng định lịch sử thuộc tính chưa có nguồn |
 | fact_order/sales_line/return/shipment | MERGE identity nguồn, refresh measures/status từ snapshot được phê chuẩn; no fact-to-fact BI joins |
 | fact_inventory_transaction/review | MERGE ID cho initial/replay, detect source mutation; business timestamps unreliable phải mang flag |
-| fact_inventory_daily_snapshot | BR32: MERGE product/warehouse/day cho actual EOD snapshot từ inventory_go_live_date, có cutoff hợp lệ; backfill June blocked, không tạo history simulated cho MVP |
+| fact_inventory_daily_snapshot | BR32 + INV-CUTOFF-v1: first accepted product/warehouse/day immutable; same-payload replay no-op, conflicting payload block. Chỉ actual capture trong [00:00:00,00:01:00) ngày sau từ go-live; June backfill blocked |
 | marts | Rebuild affected business partitions từ cùng publication snapshot set, sau reconciliation |
 
 Bronze partition theo ingestion day; fact lớn có thể dùng month(order_date) khi dữ liệu/query đủ căn cứ. Dimension nhỏ và bảng nhỏ ban đầu unpartitioned. Không partition customer_id/product_id. Compaction và snapshot retention là maintenance, không xóa file MinIO thủ công.
@@ -50,6 +50,8 @@ Bronze partition theo ingestion day; fact lớn có thể dùng month(order_date
 | Inventory business-time unreliable | Chặn historical EOD/stockout historical claims, không chặn current stock |
 
 Theo BR31, certified Direct Finance view chọn net_customer_amount (FIN02); merchandise_less_order_refund_proxy luôn có nhãn proxy và không dùng thay headline. Theo BR32, inventory_go_live_date lấy từ cấu hình/metadata lúc pipeline bắt đầu quan sát; không tự đặt bằng source.last_updated hoặc ngày chạy backfill. DQ reject mọi actual daily snapshot trước mốc đó.
+
+Chi tiết chặng 1: [runbook](../runbooks/stage1-postgres-inventory.md). Source contract version 2 yêu cầu đủ 9 bảng cho Finance; manifest 6 bảng cũ chỉ giữ audit, không apply bằng code mới. Finance snapshot cũ hơn last_observed_at bị chặn trước Bronze/Silver writes. Restatement dùng full source snapshot mới, không rollback dimension để replay quá khứ. Lookup ngày không phải event-time history chính xác. EOD là near-cutoff observation đã duyệt, giữ cutoff/observed_at/độ trễ; manual current không bù EOD thiếu.
 
 ## Late events và Kafka
 

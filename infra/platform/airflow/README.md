@@ -48,7 +48,9 @@ Mỗi task tối đa 2 retries, delay 20 giây có exponential backoff tối đa
 
 `business_date` để trống → ngày D−1 tại Việt Nam. **Nguồn hiện chỉ từ 01–30/06/2026**: để demo, Trigger DAG với `{"business_date":"2026-06-30"}`. Ngày ngoài coverage sẽ fail ở extract trước Spark. Không mặc định đổi lịch sang tháng 6 để làm xanh dashboard. Lịch thực ngày hiện tại sẽ báo thiếu nguồn cho đến khi nhóm bổ sung nguồn giả lập cập nhật hoặc chủ động pause DAG trong thời gian chưa chạy demo.
 
-Extraction vẫn là full snapshot 6 bảng trong một transaction READ ONLY/REPEATABLE READ, không phải CDC/incremental. Retry extract trong cùng run tái sử dụng manifest đã hoàn tất; manual run mới tạo snapshot mới. Giữ nguyên `runtime/direct/hmac.key` để không đổi customer identity.
+Extraction Finance là full snapshot 9 bảng trong một transaction READ ONLY/REPEATABLE READ, không phải CDC/incremental. Retry extract trong cùng run tái sử dụng manifest đã hoàn tất; manual run mới tạo snapshot mới. Giữ nguyên `runtime/direct/hmac.key` để không đổi customer identity. Source contract version 2; manifest 6 bảng cũ không apply bằng code mới.
+
+`shopvn_inventory_observation` chạy riêng **00:00 VN**, chụp nhanh inventory/products trước khi đợi Spark pool. Chỉ source observation trong [00:00:00,00:01:00) của cutoff dự kiến được publish EOD; late capture có thể cập nhật current stock nhưng EOD run fail. Manual run mặc định current. Policy go-live được bootstrap/persist immutable; không đổi INVENTORY_GO_LIVE_DATE để tạo backfill. Xem [runbook chặng 1](../../../docs/runbooks/stage1-postgres-inventory.md).
 
 ## Publication gate và giới hạn
 
@@ -63,7 +65,7 @@ Extraction vẫn là full snapshot 6 bảng trong một transaction READ ONLY/RE
 
 Dashboard tách ngày xử lý, ngày nghiệp vụ và source coverage; hiển thị service health, workflow state, FIN02 source/candidate, delta, DQ, last completion và alert. Spark là batch task, không bị báo down khi không có job. Số tiền trên Prometheus là float phục vụ hiển thị, **không** thay thế đối soát Decimal chính xác.
 
-7 rules: service down, pipeline failed, DQ gate failed, reconciliation mismatch, exporter down, polling stale, deadline 08:00. Monitor đọc PostgreSQL nguồn bằng SELECT 1 và kiểm tra Airflow API/scheduler/dag processor/metadata, platform PostgreSQL, MinIO, Trino. Không giám sát host CPU/disk/cAdvisor ở bước này.
+9 rules: service down, pipeline failed, DQ gate failed, reconciliation mismatch, exporter down, polling stale, deadline 08:00, inventory failed và EOD missing sau 00:10. Grafana có 19 panels, trong đó 6 panels inventory tách Finance coverage. Monitor đọc PostgreSQL nguồn bằng SELECT 1 và kiểm tra Airflow API/scheduler/dag processor/metadata, platform PostgreSQL, MinIO, Trino. Không giám sát host CPU/disk/cAdvisor ở bước này.
 
 Deadline 08:00 độc lập scheduler: sau 08:00 VN nếu chưa có scheduled success hoàn thành trước 08:00 hôm đó thì cảnh báo. Manual demo không thay thế scheduled success. `MONITOR_START_DATE` được bootstrap thành ngày mai để không phát cảnh báo hồi tố trước go-live. Hoàn thành trễ vẫn ghi nhận missed trong ngày. Cảnh báo chỉ hiển thị qua Prometheus/Grafana và audit; chưa có Alertmanager hay delivery ra ngoài.
 

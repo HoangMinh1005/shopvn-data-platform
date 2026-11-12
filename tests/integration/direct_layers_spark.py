@@ -103,6 +103,12 @@ class DirectLayerTests(unittest.TestCase):
             [("customer-1", 1)], "customer_ref string,customer_key long"
         )
         products = self.spark.createDataFrame([(1, 1)], "product_id int,product_key long")
+        customers = customers.withColumn("order_date", F.to_date(F.lit("2026-06-30"))).withColumn(
+            "customer_dimension_match_basis", F.lit("initial_snapshot_fallback")
+        )
+        products = products.withColumn("order_date", F.to_date(F.lit("2026-06-30"))).withColumn(
+            "product_dimension_match_basis", F.lit("initial_snapshot_fallback")
+        )
         enriched = enrich_orders(orders, returns, ref, customers)
         return orders, lines, returns, enriched, products
 

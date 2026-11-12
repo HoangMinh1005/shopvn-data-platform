@@ -4,6 +4,24 @@ Ngày thực hiện: 2026-11-11. Core storage spike, direct Finance và Airflow/
 
 Cập nhật sau refactor: [refactor evidence](refactor.json) và [bản đồ code](../architecture/code-structure.md). Các kết quả Airflow hiện đã được chạy lại với package/tầng xử lý mới.
 
+## Chặng 1 — PASS ngày 12/11/2026
+
+[Bằng chứng aggregate chặng 1](stage1.json) là trạng thái mới nhất; các báo cáo storage/direct/refactor bên dưới giữ làm mốc lịch sử.
+
+- Full snapshot đủ 9 bảng PostgreSQL trong transaction READ ONLY/REPEATABLE READ. Thêm inventory (2.000), inventory_transactions (439.722), product_reviews (41.226); không export review comment.
+- SCD2 observed-time customer/product, khoảng nửa mở và stable SK; day-as-of joins theo business key + order_date, không làm nhân fact rows. Chặn overlap, nhiều current, same-clock conflict và stale Finance apply. June facts vẫn có nhãn initial_snapshot_fallback, không suy tier/cost tại thời điểm mua.
+- Current stock đối soát nguồn theo warehouse: 2.000 sản phẩm, tổng 5.053.681 đơn vị. Policy go-live thực 11/11/2026, cửa sổ 60 giây đã được duyệt và persist immutable.
+- Actual scheduled EOD ngày 11/11 được chụp lúc **00:00:02,153998 ngày 12/11 giờ Việt Nam** (lag 2,153998 giây), DAG success. Replay capture thật giữ nguyên daily Iceberg snapshot ID/count/sum. Không chỉnh đồng hồ/manifest để làm test EOD; không backfill stock tháng 6.
+- 84 unit tests, 4 base Spark + 15 temporal Spark cases, 3 kiểm thử clock Pendulum trong runtime Airflow. Temporal fixtures nằm trong namespace riêng, không ghi lịch sử giả vào actual tables.
+- Ba fresh-process Finance replays trên manifest 9 bảng: FIN02 vẫn 1.648.602.104.364,00 VND, 60 ngày × kênh; certified mart không đổi trong candidate-only replays. Actual Airflow DQ failure/recovery cũng pass với 9 bảng.
+- Inventory audit/DAG, 6 panels mới (tổng 19) và 2 rules mới (tổng 9). Thiếu EOD sau 00:10 không được làm xanh bằng manual current run; notifications vẫn chỉ local.
+
+EOD là **near-cutoff source observation**, không chứng minh stock tuyệt đối tại 00:00. SCD2 là observed-time/day-grain, không full source event-time history. Transactions/reviews chỉ ở Bronze/Silver, chưa phải Gold marts hoàn chỉnh. Runtime Finance theo lịch hiện vẫn báo thiếu source coverage vì orders chỉ có tháng 6; inventory success không làm Finance November freshness thành đạt. Xem [runbook chặng 1](../runbooks/stage1-postgres-inventory.md).
+
+Trạng thái môi trường khi tiếp tục bàn giao ngày 12/11: Docker đã được bật lại; các container nguồn PostgreSQL/API/SFTP không còn tồn tại vào cuối lượt kiểm tra. Không tự tạo nguồn thay thế hoặc sửa/xóa audit. Evidence giữ kết quả EOD/Finance đã hoàn thành trước đó, đồng thời ghi runtime health tại lúc export. Cần khôi phục đúng nguồn trước các lần extract/scheduled EOD tiếp theo; alert source down/Finance coverage/deadline không được che để báo toàn hệ thống xanh.
+
+Theo yêu cầu kiểm tra của người dùng, đã tìm thấy volume cũ có cấu trúc PG16 và shutdown sạch; có khả năng khôi phục cao nhưng chưa start/restore. Xem [kết quả kiểm tra và giới hạn](../runbooks/source-postgres-recovery.md).
+
 ## Storage spike — PASS
 
 - Spark 3.5.9 / Scala 2.12.18 / Python 3.11.15 / Java 17.0.21.
@@ -39,10 +57,10 @@ Biểu đồ được render từ kết quả query Trino đã đối soát, kh�
 
 ## Phạm vi implementation hiện tại
 
-- Bronze/Silver cho 6 nguồn direct: orders, order_items, returns, customers (chỉ thuộc tính cho phép), products, vouchers.
-- Gold: dim_date, dim_channel direct, dim_customer/dim_product observed versions; fact_order, fact_sales_line, fact_return.
-- Initial customer/product versions và stable SK map đã được nạp; June facts gắn initial_snapshot_fallback. Không chứng minh tier/cost lịch sử tại lúc mua. Complete SCD2/as-of behavior cho các kỳ sau go-live cần kiểm thử riêng.
-- dim_date hiện là date spine của kỳ direct đã nạp, chưa phải calendar hoàn chỉnh. Voucher source có ở Bronze/Silver; dim_voucher/campaign analytics chưa thuộc slice này. Một số field mục tiêu trong data dictionary chưa triển khai ở slice Finance; không coi toàn bộ ERD đích là đã deploy.
+- Bronze/Silver cho 9 bảng PostgreSQL: orders, order_items, returns, customers (chỉ thuộc tính cho phép), products, vouchers, inventory, inventory_transactions, product_reviews.
+- Gold: dim_date, dim_channel direct, dim_customer/dim_product observed versions, dim_warehouse; fact_order, fact_sales_line, fact_return, fact_inventory_daily_snapshot. Analytics có current_stock và certified mart_fin02_daily.
+- Initial customer/product versions và stable SK map đã được nạp; June facts gắn initial_snapshot_fallback. Observed-time SCD2/day-as-of đã kiểm thử trong chặng 1; không chứng minh tier/cost lịch sử chính xác tại lúc mua.
+- dim_date giữ ngày direct và inventory đã nạp, chưa phải calendar hoàn chỉnh. Voucher source có ở Bronze/Silver; dim_voucher/campaign analytics chưa thuộc slice này. Một số field mục tiêu trong data dictionary chưa triển khai ở slice Finance; không coi toàn bộ ERD đích là đã deploy.
 - Certified output là bảng vật lý lakehouse.analytics.mart_fin02_daily. Atomic replace của mart không phải multi-table transaction toàn bộ Gold. Analytics consumer chỉ dùng mart đã phê chuẩn.
 - Đây là triển khai local đơn node, có CLI và DAG Airflow, ops pipeline/alert audit và Prometheus/Grafana. Chưa có Kafka ingestion, Superset dashboard, RBAC production hay toàn bộ ops tables trong model đích. Host ports chỉ bind loopback.
 
@@ -68,7 +86,7 @@ Setup/replay: [Airflow runbook](../../infra/platform/airflow/README.md); xử l�
 - Wheel có SQL resource và không chứa monolith đã bỏ; cài vào virtualenv độc lập, import bằng Python -I không cần Spark/Airflow cho job CLI. Hash wheel/SQL được ghi trong evidence.
 - Container runtime đã bỏ scripts khỏi PYTHONPATH; application không import helper từ deployment/verification scripts. Runtime image lock được cập nhật sau rebuild/restart.
 
-Giới hạn chức năng vẫn giữ: full-snapshot extraction, dimensions pre-go-live cohort, chưa có complete SCD2/as-of, Kafka/Superset, immutable production application image hoặc load/HA/restore certification. Local source mount vẫn dùng cho phát triển; packaging proof không đồng nghĩa production deployment đã hoàn tất.
+Giới hạn tại mốc refactor: full-snapshot extraction, dimensions pre-go-live cohort, chưa có complete SCD2/as-of. Chặng 1 đã bổ sung observed-time/day-as-of như phần đầu báo cáo; Kafka/Superset, immutable production application image và load/HA/restore certification vẫn chưa có. Local source mount vẫn dùng cho phát triển; packaging proof không đồng nghĩa production deployment đã hoàn tất.
 
 ## Các lỗi thật đã xử lý
 
@@ -79,6 +97,7 @@ Giới hạn chức năng vẫn giữ: full-snapshot extraction, dimensions pre-
 5. Airflow dùng virtualenv có psycopg nhưng Spark Python gốc không có: tách run artifact helpers thành module chỉ dùng standard library để publisher không kéo theo dependency orchestration.
 6. Airflow 3.4 giữ archived retry attempts trong task_instance: finalizer chỉ xét working_set=true. Không được coi retry lịch sử là trạng thái hiện tại; đồng thời vẫn phải fail nếu task hiện hành upstream fail.
 7. Deadline callback có thể đến sau khi một run đã fail/kết thúc sớm. Callback runtime giờ đối chiếu finished_at với deadline_time để không gán nhầm run ngắn thành chạy quá 30 phút; có regression tests cho trước/đúng/sau hạn và run chưa kết thúc.
+8. Pendulum DateTime của Airflow khi kết hợp stdlib ZoneInfo và timedelta bị lệch thêm ngày trong runtime đã quan sát. Chuẩn hóa sang native UTC datetime trước phép tính ngày; 3 regression checks chạy ngay trong Airflow container. Scheduled inventory giữ business date theo logical cutoff của run, không lấy ngày capture trễ để đổi nhãn EOD.
 
 ## Chạy lại trên máy hiện tại
 

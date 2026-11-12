@@ -21,6 +21,7 @@ def main():
             key, value = line.split("=", 1)
             existing[key.strip()] = value.strip()
     generated = {
+        "INVENTORY_GO_LIVE_DATE": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat(),
         "AIRFLOW_DB_PASSWORD": secrets.token_urlsafe(32),
         "AIRFLOW_JWT_SECRET": secrets.token_urlsafe(48),
         "AIRFLOW_API_SECRET": secrets.token_urlsafe(48),

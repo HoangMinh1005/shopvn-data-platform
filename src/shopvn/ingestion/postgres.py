@@ -17,12 +17,15 @@ from psycopg.rows import dict_row
 
 from shopvn.common.environment import load_env
 from shopvn.config import ProjectPaths
-from shopvn.contracts.direct import EXPORTS, RULE_VERSION
+from shopvn.contracts.direct import CONTRACT_VERSION, EXPORTS, RULE_VERSION
 
 
-def extract(paths: ProjectPaths | None = None) -> Path:
+def extract(paths: ProjectPaths | None = None, *, tables=None) -> Path:
     paths = paths or ProjectPaths.from_env()
     load_env(paths.project_root / ".env")
+    tables = tuple(EXPORTS) if tables is None else tuple(tables)
+    if not tables or len(set(tables)) != len(tables) or not set(tables) <= set(EXPORTS):
+        raise ValueError("Unknown or duplicate source table selection")
     snapshot_id = uuid.uuid4().hex
     folder = paths.landing / snapshot_id
     folder.mkdir(parents=True)
@@ -34,6 +37,10 @@ def extract(paths: ProjectPaths | None = None) -> Path:
         "snapshot_id": snapshot_id,
         "observed_at_utc": datetime.now(timezone.utc).isoformat(),
         "rule_version": RULE_VERSION,
+        "contract_version": CONTRACT_VERSION,
+        "selected_tables": tables,
+        "source_system": "postgres/shopvn",
+        "data_origin": "source",
         "tables": {},
         "contains_contact_pii_fields": False,
     }
@@ -50,9 +57,14 @@ def extract(paths: ProjectPaths | None = None) -> Path:
         report["source_transaction"] = conn.execute(
             "SELECT current_setting('transaction_isolation') AS isolation, "
             "current_setting('transaction_read_only') AS read_only, "
-            "pg_current_snapshot()::text AS snapshot"
+            "pg_current_snapshot()::text AS snapshot, statement_timestamp() AS observed_at"
         ).fetchone()
-        for table, columns in EXPORTS.items():
+        observed = report["source_transaction"]["observed_at"].astimezone(timezone.utc)
+        if abs((observed - datetime.now(timezone.utc)).total_seconds()) > 30:
+            raise ValueError("Source/collector clock skew exceeds 30 seconds")
+        report["observed_at_utc"] = observed.isoformat()
+        for table in tables:
+            columns = EXPORTS[table]
             destination = folder / f"{table}.csv"
             statement = sql.SQL(
                 "COPY (SELECT {} FROM {}) TO STDOUT WITH (FORMAT CSV, HEADER true)"
@@ -73,21 +85,29 @@ def extract(paths: ProjectPaths | None = None) -> Path:
                 "sha256": checksum,
                 "bytes": destination.stat().st_size,
             }
-        statement = (
-            files("shopvn.ingestion")
-            .joinpath("sql/direct_revenue_baseline.sql")
-            .read_text(encoding="utf-8")
-        )
-        report["fin02_expected_by_day_channel"] = conn.execute(statement).fetchall()
-        report["source_order_date_range"] = conn.execute(
-            "SELECT MIN(order_date) AS min_date, MAX(order_date) AS max_date FROM orders"
-        ).fetchone()
+        if {"orders", "returns"} <= set(tables):
+            statement = (
+                files("shopvn.ingestion")
+                .joinpath("sql/direct_revenue_baseline.sql")
+                .read_text(encoding="utf-8")
+            )
+            report["fin02_expected_by_day_channel"] = conn.execute(statement).fetchall()
+            report["source_order_date_range"] = conn.execute(
+                "SELECT MIN(order_date) AS min_date, MAX(order_date) AS max_date FROM orders"
+            ).fetchone()
+        if "inventory" in tables:
+            report["inventory_expected"] = conn.execute(
+                "SELECT warehouse_id,count(*) AS rows,sum(stock_qty) AS stock_qty FROM inventory GROUP BY warehouse_id ORDER BY warehouse_id"
+            ).fetchall()
     report["extraction_completed_at_utc"] = datetime.now(timezone.utc).isoformat()
     manifest = folder / "manifest.json"
     manifest.write_text(
         json.dumps(report, default=str, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    (paths.direct / "latest-snapshot.json").write_text(
+    latest = (
+        "latest-snapshot.json" if set(tables) == set(EXPORTS) else "latest-inventory-snapshot.json"
+    )
+    (paths.direct / latest).write_text(
         json.dumps({"snapshot_id": snapshot_id}, indent=2), encoding="utf-8"
     )
     print(

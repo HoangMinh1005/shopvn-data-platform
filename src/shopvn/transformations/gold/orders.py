@@ -7,6 +7,11 @@ from shopvn.quality.spark import fail_if
 
 
 def enrich_orders(orders, returns, customer_ref, earliest_customer):
+    if not {"customer_ref", "order_date", "customer_key", "customer_dimension_match_basis"} <= set(
+        earliest_customer.columns
+    ):
+        raise ValueError("Customer lookup requires business date and match basis")
+    lookup_keys = ["customer_ref", "order_date"]
     refunds = returns.groupBy("order_id").agg(
         F.sum(F.when(F.col("status") == "refunded", F.col("refund_amount")).otherwise(F.lit(0)))
         .cast(MONEY)
@@ -14,7 +19,7 @@ def enrich_orders(orders, returns, customer_ref, earliest_customer):
     )
     enriched = (
         orders.withColumn("customer_ref", customer_ref("customer_id"))
-        .join(earliest_customer, "customer_ref", "left")
+        .join(earliest_customer, lookup_keys, "left")
         .join(refunds, "order_id", "left")
         .fillna({"refunded_order_amount": 0, "customer_key": 0})
         .withColumn(
@@ -70,9 +75,10 @@ def build_order_fact(enriched):
         "is_revenue_eligible",
         "source_record_hash",
         "snapshot_id",
+        "customer_dimension_match_basis",
     )
     order_fact = order_fact.withColumn(
-        "dimension_match_basis", F.lit("initial_snapshot_fallback")
+        "dimension_match_basis", F.col("customer_dimension_match_basis")
     ).withColumn("currency_code", F.lit("VND"))
 
     return order_fact

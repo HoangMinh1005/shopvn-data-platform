@@ -11,6 +11,9 @@ SCHEMAS = {
     "customers": "customer_id int,loyalty_tier string,gender string,city string",
     "products": "product_id int,sku string,name string,category string,subcategory string,brand string,base_price decimal(20,2),cost_price decimal(20,2),weight_gram int,is_active string",
     "vouchers": "voucher_code string,type string,value decimal(20,4),min_order_value decimal(20,2),max_discount decimal(20,2),campaign_id string,valid_from date,valid_to date,max_usage int",
+    "inventory": "product_id int,warehouse_id string,stock_qty int,last_updated timestamp_ntz",
+    "inventory_transactions": "txn_id int,product_id int,order_id string,type string,qty_change int,created_at timestamp_ntz",
+    "product_reviews": "review_id int,order_id string,product_id int,customer_id int,rating int,created_at timestamp_ntz",
 }
 PRIMARY_KEYS = {
     "orders": "order_id",
@@ -19,7 +22,15 @@ PRIMARY_KEYS = {
     "customers": "customer_id",
     "products": "product_id",
     "vouchers": "voucher_code",
+    "inventory": "product_id",
+    "inventory_transactions": "txn_id",
+    "product_reviews": "review_id",
 }
+
+CONTRACT_VERSION = 2
+FINANCE_TABLES = frozenset(
+    {"orders", "order_items", "returns", "customers", "products", "vouchers"}
+)
 
 
 def source_columns(table: str) -> tuple[str, ...]:

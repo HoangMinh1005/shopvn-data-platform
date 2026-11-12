@@ -8,6 +8,12 @@ Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Icebe
 - Silver: chuẩn hóa riêng direct/marketplace/logistics/inventory; chỉ tạo sales_lines_conformed sau khi xử lý riêng từng nguồn.
 - Gold: dimensions dùng chung, core facts và certified marts. Không công bố PII trực tiếp.
 
+## Subset đã triển khai sau chặng 1
+
+Bronze/Silver đã có đủ 9 bảng PostgreSQL. Gold có 5 dimensions (date/channel/customer/product/warehouse), 3 facts Finance và fact_inventory_daily_snapshot; analytics có mart_fin02_daily và current_stock. Inventory transactions và reviews hiện chỉ ở Bronze/Silver, chưa có Gold facts tương ứng. Các bảng còn lại bên dưới là model đích, không phải danh sách đã deploy.
+
+Customer/product dùng SCD2 observed-time; lookup theo business key + order_date tại min(cuối ngày Việt Nam, thời điểm extract). Có nhãn observed_day_asof hoặc initial_snapshot_fallback, không khẳng định tier/cost tại giây mua hàng. EOD là actual source observation trong 60 giây đầu sau midnight theo [INV-CUTOFF-v1](../business/decisions/2026-11-11-inventory-cutoff.md). Xem [runbook và giới hạn](../runbooks/stage1-postgres-inventory.md).
+
 ## Dimensions dự kiến
 
 | Bảng | Grain / ghi chú |

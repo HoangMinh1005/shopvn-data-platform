@@ -32,3 +32,11 @@ groups:
         expr: shopvn_pipeline_dq_passed == 0 and on() shopvn_pipeline_state{state="failed"} == 1
         labels: {severity: critical}
         annotations: {summary: 'Failed workflow has not passed its DQ gate'}
+      - alert: ShopVNInventoryFailed
+        expr: shopvn_inventory_failed == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Inventory workflow failed; current stock must not be relabelled as missed EOD'}
+      - alert: ShopVNInventoryEODMissing
+        expr: shopvn_inventory_eod_missing == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Actual EOD publication missing after 00:10 Vietnam'}

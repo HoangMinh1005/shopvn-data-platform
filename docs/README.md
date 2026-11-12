@@ -11,6 +11,8 @@ Nếu quyết định nghiệp vụ đụng giới hạn dữ liệu hoặc yêu
 
 Bản đồ implementation sau refactor: [cấu trúc application](architecture/code-structure.md). Model thiết kế đích không đồng nghĩa toàn bộ bảng/feature đã được triển khai.
 
+Chặng 1 đã có [runbook PostgreSQL/SCD2/inventory](runbooks/stage1-postgres-inventory.md), [quyết định cutoff EOD 60 giây đã duyệt](business/decisions/2026-11-11-inventory-cutoff.md) và [bằng chứng thực thi](verification/stage1.json). Finance rule version vẫn 1.1, source contract version 2 và inventory policy INV-CUTOFF-v1 là ba version riêng.
+
 ## Vị trí tài liệu
 
 | Thư mục | Nội dung |

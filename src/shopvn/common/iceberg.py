@@ -39,6 +39,12 @@ def merge_fact(spark, df, table: str, key: str, observed_at: str, run_id: str):
     if not spark.catalog.tableExists(table):
         df.writeTo(table).using("iceberg").tableProperty("format-version", "2").create()
     else:
+        existing = set(spark.table(table).columns)
+        for field in df.schema.fields:
+            if field.name not in existing:
+                spark.sql(
+                    f"ALTER TABLE {table} ADD COLUMN `{field.name}` {field.dataType.simpleString()}"
+                )
         df.createOrReplaceTempView("incoming_fact")
         spark.sql(f"""MERGE INTO {table} t USING incoming_fact s ON t.{key}=s.{key}
                   WHEN MATCHED AND t.business_hash<>s.business_hash THEN UPDATE SET *
