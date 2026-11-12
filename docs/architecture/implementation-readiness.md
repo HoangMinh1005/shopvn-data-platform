@@ -1,5 +1,7 @@
 # Công việc trước triển khai diện rộng
 
+Thứ tự stage MVP và checklist tiến độ được quản lý duy nhất tại [kế hoạch triển khai MVP](mvp-implementation-plan.md). **Stage 2 là SFTP + Finance marketplace**, không phải Kafka. Tài liệu readiness này giữ các bước chuẩn bị và bằng chứng nền tảng; P1–P3 bên dưới không phải S1–S3 của lộ trình MVP.
+
 Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimplementation-status.md). Checkbox chỉ đánh dấu phần đã quan sát/kiểm tra, không đánh dấu spike pass khi mới có script.
 
 ## Đã hoàn thành
@@ -12,7 +14,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Thêm hướng dẫn Git, env template và CI kiểm tra repository.
 - [x] Refactor package theo layer/domain, bỏ runtime dependency vào scripts, đóng gói SQL và kiểm chứng wheel độc lập. Xem [bản đồ code](code-structure.md).
 
-## Giai đoạn 1 — Profiling nguồn
+## Tiền triển khai P1 — Profiling nguồn
 
 - [x] Kết nối nguồn có sẵn và xác nhận quyền SELECT của ingestion.
 - [x] Kiểm tra schema/PK/FK/null/status, cardinality; ghi timezone chưa được source owner xác nhận.
@@ -21,7 +23,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Phát hiện giới hạn refund composition, inventory business time và warehouse lineage; không tự suy các thông tin thiếu.
 - [x] Lưu báo cáo aggregate vào docs/profiling, không commit dữ liệu khách hàng thật.
 
-## Giai đoạn 2 — Contract và bộ số nghiệm thu
+## Tiền triển khai P2 — Contract và bộ số nghiệm thu
 
 - [x] Tạo data dictionary từng cột/nhóm field: nguồn, công thức, type, nullable, grain.
 - [x] Ghi identity, update/delete, incremental, backfill/idempotency; chặn phần thiếu nguồn.
@@ -29,7 +31,7 @@ Kết quả thực hiện ngày 2026-11-11: [báo cáo trạng thái](preimpleme
 - [x] Vẽ ERD hiện hành bằng Mermaid; không dùng ERD legacy làm bản cuối.
 - [x] Tạo fixture giả lập và chạy 23 reference/unit tests, gồm BR31/BR32 và fractional discount remainder.
 
-## Giai đoạn 3 — Technical spike
+## Tiền triển khai P3 — Technical spike
 
 - [x] Spark ghi Iceberg trên MinIO, Trino đọc cùng catalog.
 - [x] MERGE và schema addition hoạt động như kỳ vọng.
@@ -55,6 +57,6 @@ Core spike, direct Finance và Airflow/monitoring đã có [bằng chứng thự
 - [x] Actual scheduled EOD ngày 11/11: capture 00:00:02,154 ngày 12/11 VN; replay giữ nguyên Iceberg daily snapshot.
 - [x] 84 unit tests, 19 Spark cases, 3 Airflow clock checks, 3 Finance process replays, DQ failure/recovery; FIN02 không đổi.
 
-Chi tiết: [runbook chặng 1](../runbooks/stage1-postgres-inventory.md), [bằng chứng aggregate](../verification/stage1.json). Stage 1 không triển khai Gold transaction/review marts, Kafka, SFTP/API hoặc Superset. Bước tiếp theo là simulator/Kafka và kiểm chứng streaming theo scope MVP đã duyệt; không cần HA/retention/full backup trước khi bắt đầu chặng đó, nhưng phải hoàn thiện trước vận hành dài hạn theo mức rủi ro.
+Chi tiết: [runbook chặng 1](../runbooks/stage1-postgres-inventory.md), [bằng chứng aggregate](../verification/stage1.json). Stage 1 không triển khai Gold transaction/review marts, Kafka, SFTP/API hoặc Superset. **Bước tiếp theo đã xác nhận là S2 — SFTP + Finance marketplace**, bắt đầu S2-01 theo [kế hoạch chính](mvp-implementation-plan.md). Dòng định hướng Kafka trước đây là ghi nhận sai đã được sửa ngày 12/11/2026, không phải một thay đổi kế hoạch được duyệt. Thứ tự S3–S7 trong kế hoạch là đề xuất chờ duyệt; không dùng readiness để tự đổi thứ tự stage.
 
 Definition of Done phải có cả kết quả đúng, khả năng chạy lại, lỗi nguồn được xử lý và visibility trên dashboard/log.

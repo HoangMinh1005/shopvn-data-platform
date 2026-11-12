@@ -22,6 +22,8 @@ Trạng thái môi trường khi tiếp tục bàn giao ngày 12/11: Docker đã
 
 Theo yêu cầu kiểm tra của người dùng, đã tìm thấy volume cũ có cấu trúc PG16 và shutdown sạch; có khả năng khôi phục cao nhưng chưa start/restore. Xem [kết quả kiểm tra và giới hạn](../runbooks/source-postgres-recovery.md).
 
+Cập nhật sau đó ngày 12/11: người dùng đã tự phục hồi nguồn; kiểm tra read-only lại xác nhận PostgreSQL 9 bảng/counts/keys/FIN02/stock khớp, API health và SFTP authentication thành công, monitor 8/8 components healthy tại lúc kiểm tra. Không ghi đè health snapshot lịch sử trong stage1.json và không coi đây là full DAG rerun. Thứ tự công việc tiếp theo theo [kế hoạch MVP](../architecture/mvp-implementation-plan.md): **S2 — SFTP + Finance marketplace**.
+
 ## Storage spike — PASS
 
 - Spark 3.5.9 / Scala 2.12.18 / Python 3.11.15 / Java 17.0.21.

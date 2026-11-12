@@ -64,4 +64,4 @@ Phải có giao diện/log trả lời được thời điểm hoàn thành, tì
 
 ## Cổng kiểm chứng
 
-Xem [readiness checklist](implementation-readiness.md). Mỗi image phải khóa tag/digest và mỗi JAR/provider phải có version sau khi spike thành công. Không sử dụng `latest` để triển khai baseline đã nghiệm thu.
+Thứ tự stage và checklist nghiệm thu nằm ở [kế hoạch triển khai MVP](mvp-implementation-plan.md); **S2 là SFTP + Finance marketplace**, không phải simulator/Kafka. Kiến trúc có Kafka không đồng nghĩa phải triển khai Kafka ngay sau S1. [Readiness checklist](implementation-readiness.md) giữ các bước tiền triển khai. Mỗi image phải khóa tag/digest và mỗi JAR/provider phải có version sau khi spike thành công. Không sử dụng `latest` để triển khai baseline đã nghiệm thu.

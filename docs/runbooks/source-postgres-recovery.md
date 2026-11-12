@@ -23,3 +23,11 @@ Kết luận: **có khả năng khôi phục cao từ volume còn lại**, khôn
 Counts tham chiếu: orders 211806, order_items 444142, returns 4215, customers 50000, products 2000, vouchers 200, inventory 2000, inventory_transactions 439722, product_reviews 41226. FIN02 1648602104364.00 VND; current stock tại lần quan sát đã kiểm chứng 5053681 đơn vị. Dữ liệu nguồn có thể đã thay đổi hợp lệ sau lần quan sát; mọi delta phải giải thích, không tự sửa source.
 
 EOD ngày 11/11 và Bronze snapshots đã kiểm chứng vẫn được giữ trong lakehouse/runtime; chúng không thay thế việc khôi phục PostgreSQL nguồn cho các lần extract tiếp theo. [Bằng chứng chặng 1](../verification/stage1.json).
+
+## Cập nhật sau khi người dùng tự phục hồi ngày 12/11/2026
+
+Người dùng đã tự phục hồi các container nguồn và yêu cầu kiểm tra lại. Đã xác nhận postgres healthy, dùng image local shopvn-postgres:v1.1.0 và volume gr2_postgres-data. Kết nối bằng shopvn_reader trong transaction READ ONLY/REPEATABLE READ: đủ required columns, counts 9 bảng khớp baseline, không null/trùng primary keys; FIN02 và current-stock total khớp số tham chiếu ở trên.
+
+API /health trả OK. SFTP authentication/listing thành công: Lazada 29, Shopee 30, TikTok 28 CSV. Host key SFTP khác mốc profiling trước; đã đối chiếu network fingerprint với public key trong đúng container phục hồi trước khi xác thực. Chưa recheck toàn bộ MD5 hoặc chạy lại full Airflow end-to-end trong lượt kiểm tra đọc đó. Không reset key/credential, sửa source hoặc tự xóa failed-run audit.
+
+Như vậy mục kiểm tra khả năng phục hồi ở trên là lịch sử trước khi người dùng khôi phục; không dùng nó để khẳng định nguồn hiện vẫn mất. Công việc tiếp theo theo [kế hoạch MVP](../architecture/mvp-implementation-plan.md) là S2 — SFTP + Finance marketplace.

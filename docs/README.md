@@ -4,10 +4,13 @@ Thứ tự áp dụng khi có khác biệt:
 
 1. [Yêu cầu dự án gốc](sources/01_project_requirements.md): yêu cầu bắt buộc của đề bài.
 2. [Business rules, phiên bản hiện hành 1.1](business/business-rules-v1.md): gồm BR01–BR30 và [BR31/BR32 bổ sung đã duyệt](business/decisions/2026-11-11-finance-inventory.md) ngày 2026-11-11.
-3. [Architecture baseline](architecture/baseline-v1.md) và [model baseline](data-model/README.md): định hướng triển khai hiện hành, có ghi rõ phần chưa kiểm chứng.
-4. Các tài liệu `legacy/`: lịch sử phương án, không phải hợp đồng triển khai hiện hành.
+3. [Kế hoạch triển khai MVP](architecture/mvp-implementation-plan.md): nguồn duy nhất về thứ tự stage, phạm vi, checklist và trạng thái phê duyệt. S2 là SFTP + Finance marketplace; thứ tự S3–S7 còn là đề xuất chờ duyệt.
+4. [Architecture baseline](architecture/baseline-v1.md) và [model baseline](data-model/README.md): định hướng kỹ thuật/model, có ghi rõ phần chưa kiểm chứng; không tự đổi thứ tự trong kế hoạch.
+5. Các tài liệu `legacy/`: lịch sử phương án, không phải hợp đồng triển khai hiện hành.
 
 Nếu quyết định nghiệp vụ đụng giới hạn dữ liệu hoặc yêu cầu đề bài, ghi ngoại lệ và báo cáo giới hạn; không sửa dữ liệu để tạo cảm giác đã đáp ứng.
+
+Readiness chứa các bước chuẩn bị **P1–P3**, không phải các stage MVP **S1–S7**. Muốn đổi thứ tự/phạm vi phải theo change-control trong kế hoạch và được người dùng duyệt trước; không lấy bản ghi trong chat hoặc dòng "bước tiếp theo" ở tài liệu khác làm phê duyệt tự động.
 
 Bản đồ implementation sau refactor: [cấu trúc application](architecture/code-structure.md). Model thiết kế đích không đồng nghĩa toàn bộ bảng/feature đã được triển khai.
 

@@ -10,6 +10,7 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_PATHS = (
+    "AGENTS.md",
     ".env.example",
     "README.md",
     "CONTRIBUTING.md",
@@ -20,6 +21,7 @@ REQUIRED_PATHS = (
     "docs/sources/images/datasources.png",
     "docs/business/business-rules-v1.md",
     "docs/architecture/baseline-v1.md",
+    "docs/architecture/mvp-implementation-plan.md",
     "docs/data-model/README.md",
     "infra/sources/docker-compose.yml",
     "infra/platform/README.md",

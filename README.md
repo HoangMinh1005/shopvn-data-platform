@@ -11,6 +11,7 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 - Chặng 1 đã mở rộng PostgreSQL → Bronze/Silver đủ 9 bảng, SCD2 observed-time/day-as-of, current stock và EOD thật từ go-live. Có 84 unit tests, 19 Spark integration cases, 3 kiểm thử clock trong runtime Airflow, 3 fresh-process Finance replays và smoke test failure → recovery. [Bằng chứng thực thi](docs/verification/README.md) ghi rõ scope đã pass và phần còn thiếu.
 - EOD đầu tiên của ngày 11/11/2026 được chụp tự động lúc 00:00:02,154 ngày 12/11 giờ Việt Nam: 2.000 sản phẩm, 5.053.681 đơn vị tồn. Đây là quan sát gần cutoff trong cửa sổ 60 giây đã duyệt, không phải tồn chính xác tuyệt đối tại 00:00. [Runbook chặng 1](docs/runbooks/stage1-postgres-inventory.md).
 - Nghiệp vụ hiện hành v1.1 đã chốt: FIN02 net customer amount là KPI Finance chính cho direct; inventory chỉ current stock và actual snapshots từ go-live, chặn June backfill. [Biên bản BR31/BR32](docs/business/decisions/2026-11-11-finance-inventory.md).
+- Stage tiếp theo đã xác nhận: **S2 — SFTP + Finance marketplace**. Thứ tự, task IDs, checklist và phê duyệt phạm vi chỉ quản lý tại [kế hoạch triển khai MVP](docs/architecture/mvp-implementation-plan.md); S3–S7 trong đó là đề xuất chờ duyệt, không tự coi là kế hoạch cũ đã chốt.
 
 ## Tài liệu bắt đầu
 
@@ -22,7 +23,8 @@ Dự án phân tích thương mại điện tử với Spark Lakehouse, Iceberg 
 | Quy tắc nghiệp vụ đã duyệt | [Business rules v1.1](docs/business/business-rules-v1.md) |
 | Kiến trúc và stack đã chọn | [Architecture baseline](docs/architecture/baseline-v1.md) |
 | Data model hiện hành và các điểm cần xác minh | [Model baseline](docs/data-model/README.md) |
-| Công việc tiếp theo | [Implementation readiness](docs/architecture/implementation-readiness.md) |
+| Kế hoạch triển khai và checklist chính thức | [MVP implementation plan](docs/architecture/mvp-implementation-plan.md) |
+| Checklist tiền triển khai và nền tảng đã kiểm chứng | [Implementation readiness](docs/architecture/implementation-readiness.md) |
 | Kết quả profiling thực tế | [Source findings](docs/profiling/findings.md) |
 | KPI contracts | [KPI contracts v1](docs/business/kpi-contracts-v1.md) |
 | Data dictionary và mapping | [Gold data dictionary](docs/data-model/data-dictionary-v1.md) |

@@ -7,6 +7,8 @@
 5. Khi có code xử lý, thêm kiểm thử với kết quả kỳ vọng độc lập; tránh fixture chứa dữ liệu khách hàng thật.
 6. Đề nghị một thành viên khác review trước khi merge.
 
+Trước khi chọn công việc, đọc [kế hoạch triển khai MVP](docs/architecture/mvp-implementation-plan.md) và ghi stage/task ID trong mô tả thay đổi. **S2 là SFTP + Finance marketplace**. Đổi thứ tự, phạm vi hoặc KPI phải có đề xuất trước/sau và người dùng duyệt; không coi S3–S7 còn là đề xuất thành kế hoạch đã chốt. Checklist hoàn thành phải có bằng chứng kiểm thử, không đánh dấu chỉ vì đã có code.
+
 ## Quy ước
 
 - Dùng Python 3.11 cho application; không cài Airflow, Spark, Superset chung một môi trường Python host.
