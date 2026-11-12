@@ -7,21 +7,27 @@ src/shopvn/
   config.py                    Đường dẫn môi trường và runtime
   contracts/direct.py          Schema/parser/allowlist nguồn, PK, rule version
   contracts/inventory.py       Go-live, cửa sổ EOD 60 giây, missing-publication policy
+  contracts/marketplace.py     File schema, Decimal/formula checks, partner/channel registry
   ingestion/postgres.py        Snapshot PostgreSQL read-only, manifest/checksum
+  ingestion/sftp.py            Pinned-host SFTP, chunked download, MD5/SHA256, file reference
   ingestion/sql/               SQL đối soát nguồn được đóng gói trong wheel
   transformations/
     bronze/direct.py           Xác minh snapshot, ghi Bronze chống nạp trùng
     silver/direct.py           Chuẩn hóa wire values, snapshot Silver hiện hành
+    silver/marketplace.py      Immutable Bronze file versions và typed active marketplace rows
     gold/dimensions.py         Customer/product lookups theo business key + order_date
     gold/temporal.py           SCD2 observed-time, kiểm tra và day-as-of lookup
     gold/inventory.py          Warehouse keys, current stock, immutable accepted EOD
+    gold/marketplace.py        Conformed marketplace sales lines, observed product lookup
     gold/orders.py            Eligibility và số tiền cấp đơn
     gold/sales_lines.py       Phân bổ discount cấp dòng
     gold/returns.py           Return cấp đơn
   marts/finance.py             Tổng hợp FIN02 ngày × kênh
   marts/publication.py         Gate snapshot đã duyệt và atomic publish
+  marts/marketplace.py         Marketplace/comparable merchandise/settlement, coverage và AOV
   pipelines/direct_finance.py  Kết hợp các tầng, kiểm tra và persistence
   pipelines/inventory.py       Actual inventory observation độc lập Finance coverage
+  pipelines/marketplace.py     Versioned registry, isolated candidates và publication cuối
   jobs/                       CLI/Spark-submit entry points
   quality/                    Spark checks, Decimal reconciliation, reference tests
   common/                     Spark runtime, Iceberg writes, local env loader
@@ -60,6 +66,8 @@ Package cũng build/cài được từ wheel; SQL baseline đi kèm package qua 
 
 Console commands: `shopvn-extract`, `shopvn-finance`, `shopvn-publish-finance`, `shopvn-inventory`, `shopvn-monitor`. Spark jobs chạy trong image Spark đã khóa; không cài PySpark mới nhất vào Airflow virtualenv để thay engine. CLI `--help` và import job không khởi động Spark.
 
+S2 thêm `shopvn-marketplace-extract` (Paramiko extra) và `shopvn-marketplace prepare|publish` (Spark job). Spark không import ingestion SFTP/Paramiko hoặc Airflow task adapters. `quality/marketplace.py` chạy Trino + SQL PostgreSQL read-only độc lập; publisher dùng standard-library approval artifacts và pinned table snapshots. DAG marketplace dùng ops audit riêng.
+
 Local Compose vẫn mount source để phát triển và dùng image runtime đã kiểm chứng. Việc kiểm tra wheel không đồng nghĩa đã có immutable application image/CI deployment production. Không đổi tên catalog, bucket, bảng, volume hoặc rotate HMAC key trong đợt refactor này.
 
 ## Kiểm thử hồi quy
@@ -78,4 +86,4 @@ Xem [hướng dẫn tests](../../tests/README.md) và [bằng chứng thực thi
 
 Giữ nguyên tài liệu nguồn, model/ERD lịch sử, source profiling, storage spike tools, acceptance references và evidence. Chúng là tài sản kiểm chứng, không phải code thừa. Không xóa `.env`, runtime snapshots, data, volumes, HMAC key hoặc logs. Các file code đã bỏ có thể khôi phục từ Git tại commit `2430174`.
 
-Kafka/simulator, API/SFTP ingestion, Superset, incremental/event-time history và retention vẫn là hạng mục tiếp theo; không tạo implementation rỗng để thể hiện chúng đã có. Snapshot Finance cũ hơn observation watermark bị chặn trước writes, không dùng để rollback lịch sử mới.
+SFTP/marketplace đã có ở S2; Kafka/simulator, API ingestion, Superset, incremental/event-time history và retention vẫn chưa triển khai. Thứ tự stage theo [kế hoạch MVP](mvp-implementation-plan.md), không suy thứ tự từ danh sách này. Snapshot Finance cũ hơn observation watermark bị chặn trước writes, không dùng để rollback lịch sử mới.

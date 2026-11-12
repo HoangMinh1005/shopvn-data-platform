@@ -30,6 +30,22 @@ CREATE TABLE IF NOT EXISTS ops.inventory_run (
  rows bigint, stock_qty bigint, current_published boolean, eod_published boolean,
  started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz
 );
+CREATE TABLE IF NOT EXISTS ops.marketplace_run (
+ run_key text PRIMARY KEY,dag_run_id text NOT NULL,run_type text NOT NULL,
+ start_date date NOT NULL,end_date date NOT NULL,status text NOT NULL,
+ capture_id text,expected_files int,verified_files int,missing_files int,rejected_files int,
+ accepted_rows bigint,reported_net numeric(30,2),gate_passed boolean,published boolean DEFAULT false,
+ coverage_complete boolean DEFAULT false,started_at timestamptz NOT NULL DEFAULT now(),finished_at timestamptz
+);
+CREATE TABLE IF NOT EXISTS ops.marketplace_file (
+ run_key text NOT NULL,partner text NOT NULL,business_date date NOT NULL,filename text NOT NULL,
+ state text NOT NULL,sha256 text,bytes bigint,source_rows bigint,accepted_rows bigint,
+ PRIMARY KEY(run_key,partner,business_date)
+);
+ALTER TABLE ops.marketplace_run ADD COLUMN IF NOT EXISTS reconciliation_delta numeric(30,2);
+ALTER TABLE ops.marketplace_run ADD COLUMN IF NOT EXISTS formula_warnings bigint;
+ALTER TABLE ops.marketplace_run ADD COLUMN IF NOT EXISTS excluded_status_rows bigint;
+ALTER TABLE ops.marketplace_run ADD COLUMN IF NOT EXISTS capture_completed_at timestamptz;
 """
 
 

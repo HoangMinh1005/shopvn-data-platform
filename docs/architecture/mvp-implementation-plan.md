@@ -6,12 +6,12 @@ Phiên bản kế hoạch: **1.0**, cập nhật **12/11/2026**, ngày/giờ ngh
 
 | Mục | Giá trị hiện hành |
 |---|---|
-| Stage đã hoàn thành | **S1 — PostgreSQL, temporal model và actual inventory** |
-| Stage tiếp theo đã xác nhận | **S2 — SFTP và Finance marketplace** |
-| Trạng thái S2 | Sẵn sàng lập trình; **chưa triển khai pipeline** |
-| Công việc đầu tiên | **S2-01 — Chốt contract file, phạm vi publication và bộ số đối soát** |
+| Stage đã có implementation/evidence | **S1 và S2 — SFTP + Finance marketplace**; S2 chờ nhóm review/ký đóng stage |
+| Stage đang bàn giao | **S2 — SFTP và Finance marketplace** |
+| Trạng thái S2 | Code và self-verification đã hoàn tất; không tự nhận đã có review độc lập |
+| Công việc tiếp theo | Nhóm review S2-10/evidence; xác nhận thứ tự S3–S7 trước khi mở stage mới |
 | Kafka/simulator | Không thuộc S2; đặt ở S5 trong đề xuất dưới đây |
-| Phạm vi được thực hiện trong lượt tạo tài liệu | Kế hoạch, checklist và đồng bộ tài liệu; không tự triển khai S2 |
+| Quyền triển khai S2 | Người dùng đã yêu cầu “Hãy hoàn thiện S2”; không bao gồm tự mở S3/Kafka/Superset |
 | Trạng thái phê duyệt lộ trình | S1 có bằng chứng; S2 đã được xác nhận trong hội thoại; **thứ tự/đánh số S3–S7 là đề xuất chờ duyệt** |
 
 Repo chưa lưu đủ bản lộ trình 7 chặng cũ trong hội thoại. Vì vậy S3–S7 bên dưới là **phương án chuẩn hóa để nhóm review**, không được gọi là bản cũ đã được duyệt. Không tự đổi S2 sang Kafka vì một thành phần khác cũng chưa hoàn thành. Muốn triển khai stage còn là đề xuất phải xác nhận với người dùng trước.
@@ -28,7 +28,7 @@ Từ nay dùng `S1…S7` cho các stage MVP. Các mục profiling/contract/spike
 - [x] PostgreSQL đã nạp đủ 9 bảng; customer/product SCD2 theo thời điểm quan sát, day-as-of và initial fallback có nhãn.
 - [x] Current stock và EOD thật đã đối soát; EOD ngày 11/11 được chụp 00:00:02,153998 ngày 12/11 VN, trong cửa sổ đã duyệt.
 - [x] Người dùng phục hồi nguồn ngày 12/11; kiểm tra đọc lại thấy đúng volume PostgreSQL cũ, số dòng 9 bảng và Finance/tồn kho khớp. API health và SFTP authentication đã kiểm tra. Đây **không phải** một lần chạy lại toàn bộ DAG sau restore.
-- [x] Core lakehouse, Airflow và local monitoring đã có implementation; Kafka, SFTP/API pipelines và Superset chưa triển khai.
+- [x] Core lakehouse, Airflow và local monitoring đã có implementation; SFTP/marketplace pipeline đã bổ sung ở S2. API ingestion, Kafka và Superset chưa triển khai.
 
 Counts tham chiếu PostgreSQL: orders 211806, order_items 444142, returns 4215, customers 50000, products 2000, vouchers 200, inventory 2000, inventory_transactions 439722, product_reviews 41226. FIN02 direct = **1648602104364.00 VND**; current stock tại mốc kiểm tra = **5053681** đơn vị.
 
@@ -51,7 +51,7 @@ Các số trên là baseline của một snapshot, không phải hằng số b�
 | Stage | Phạm vi chính | Phụ thuộc | Trạng thái | Ước lượng còn lại |
 |---|---|---|---|---|
 | S1 | PostgreSQL 9 bảng, SCD2/day-as-of, actual inventory | Core/refactor/ops đã có | Hoàn thành trong scope ghi nhận | 0; sửa regression nếu phát sinh |
-| **S2** | **SFTP + Finance marketplace** | S1 | **Đã xác nhận; chưa bắt đầu code** | 4–6 ngày công |
+| **S2** | **SFTP + Finance marketplace** | S1 | **Implementation/self-tests PASS; chờ nhóm review** | Review và sửa nếu phát sinh |
 | S3 | Logistics API + Operations | S1; làm sau S2 trong đề xuất này | Đề xuất chờ duyệt | 3–5 ngày công |
 | S4 | Customer/Marketing + Product/Inventory marts còn thiếu | S1, S2; S3 cho return/logistics liên quan | Đề xuất chờ duyệt | 4–6 ngày công |
 | S5 | Simulator + Kafka + Spark Structured Streaming | Batch contracts ổn định sau S2–S4 | Đề xuất chờ duyệt | 4–6 ngày công |
@@ -59,6 +59,8 @@ Các số trên là baseline của một snapshot, không phải hằng số b�
 | S7 | Hardening local, nghiệm thu và bàn giao MVP | Các stage thuộc scope được duyệt đã pass | Đề xuất chờ duyệt | 3–5 ngày công |
 
 Ước lượng là effort tham khảo, không phải cam kết ngày hoàn thành. Chưa có năng lực máy, lịch thành viên và ngày bảo vệ nên chưa gán deadline lịch. S2–S7 khoảng 20–32 ngày công nếu giữ nguyên scope đề xuất, chưa cộng thời gian chờ duyệt/nguồn/sửa lỗi lớn. Review lại sau khi S2 có số đo thực tế.
+
+Cập nhật S2: phần triển khai do Codex thực hiện và tự kiểm thử, chưa có reviewer độc lập được nhóm chỉ định. Ước lượng 20–32 ngày công ở trên là mốc lập kế hoạch ban đầu, không phải effort còn lại sau S2. Xem [runbook S2](../runbooks/stage2-marketplace-finance.md) và báo cáo kiểm chứng S2 trong [verification index](../verification/README.md).
 
 Phân công theo vai trò, không giả định nhóm đã có người phụ trách:
 
@@ -98,86 +100,86 @@ Ngoài S2: Kafka/simulator, Logistics API ingestion, Superset, actual bank settl
 ### 5.2 Điều kiện mở S2
 
 - [x] S1 có evidence và nguồn đã được người dùng khôi phục/kiểm tra đọc.
-- [ ] Tạo nhánh S2 từ baseline S1 đã review; kiểm tra tình trạng push/merge với người dùng, không tự merge.
-- [ ] Điền người thực hiện/reviewer và xác nhận năng lực máy; giữ một Spark writer local, không tranh cutoff inventory 00:00 VN.
-- [ ] Xác minh lại SFTP host key theo kênh tin cậy và quyền đọc, không tự bỏ qua key mismatch. Host key của container phục hồi đã đổi so với profiling cũ.
-- [ ] Điền phạm vi partner/ngày demo và ngày báo cáo; không coi data tháng 6 là freshness tháng 11.
+- [x] Nhánh feat/stage2-marketplace-finance từ baseline S1 + kế hoạch 5f41b62; không tự push/merge.
+- [ ] Người thực hiện: Codex; self-tests có bằng chứng, reviewer độc lập chờ nhóm phân công. Máy đã chạy được một Spark writer; không tự coi self-review là review độc lập.
+- [x] SFTP host key đã đối chiếu public key container tin cậy, pin trước authentication; quyền đọc và mismatch-refusal đã kiểm thử.
+- [x] Phạm vi thực tế: ba partner, 01–30/06/2026. Không coi dữ liệu tháng 6 là freshness tháng 11.
 
 ### 5.3 Các hạng mục theo thứ tự
 
 #### S2-01 — Contract và baseline đối soát — DE + reviewer
 
-- [ ] Chốt schema, required/optional columns, type tiền Decimal, accepted statuses, quy tắc filename/partner/order_date/settlement_date. Cột mới không ảnh hưởng semantics được ignore có audit; missing/type đổi bị phát hiện, không cast âm thầm.
-- [ ] Khóa dòng canonical `(partner, external_order_id, shopvn_product_id)`; cùng key/same payload và khác payload có policy rõ. Không dùng row number làm identity.
-- [ ] Lập independent baseline theo partner/day cho counts, completed units, FIN04, FIN05, status exclusions; lưu checksum của input và formula warnings.
-- [ ] Xác nhận expected-file calendar và partial publication: thiếu partner/ngày vẫn được công bố phần hợp lệ có nhãn; không báo all-channel complete.
+- [x] Chốt schema, required/optional columns, type tiền Decimal, accepted statuses, quy tắc filename/partner/order_date/settlement_date. Cột mới không ảnh hưởng semantics được ignore có audit; missing/type đổi bị phát hiện, không cast âm thầm.
+- [x] Khóa dòng canonical `(partner, external_order_id, shopvn_product_id)`; cùng key/same payload và khác payload có policy rõ. Không dùng row number làm identity.
+- [x] Lập independent baseline theo partner/day cho counts, completed units, FIN04, FIN05, status exclusions; lưu checksum của input và formula warnings.
+- [x] Xác nhận expected-file calendar và partial publication: thiếu partner/ngày vẫn được công bố phần hợp lệ có nhãn; không báo all-channel complete.
 
-Profiling ngày 11/11 ghi 90 file kỳ vọng, 85 MD5-valid, 3 missing, 2 checksum mismatch; 63103 rows trong file hợp lệ, completed 55481. Sau restore mới kiểm tra được listing 87 CSV, chưa chạy lại toàn bộ MD5. **S2 phải tái xác minh**, không coi số profiling là kết quả test mới.
+Profiling ngày 11/11 ghi 90 file kỳ vọng, 85 MD5-valid, 3 missing, 2 checksum mismatch; 63103 rows trong file hợp lệ, completed 55481. S2 đã tái đọc nguồn thực và xác nhận lại MD5: 85 hợp lệ, 3 missing, 2 mismatch; 63103 accepted rows, completed 55481. Không coi listing đơn thuần là checksum verification.
 
 #### S2-02 — SFTP ingestion và file manifest — DE + Platform
 
-- [ ] Download theo chunks vào vùng tạm; kiểm tra MD5 trên đúng bytes trước parse, lưu thêm SHA256 cho provenance. Không đọc toàn bộ file vào RAM.
-- [ ] File thiếu/checksum thiếu/checksum sai/download dở có trạng thái riêng, lỗi rõ và retry phù hợp; file lỗi không vào accepted Bronze/Silver.
-- [ ] File identity gồm partner + business date + filename; content version theo checksum. Giữ expected/observed checksum, bytes, observed_at, version, run và row/rejection counts khi đã parse.
-- [ ] Chỉ đánh dấu verified sau khi file local hoàn tất; retry tái dùng verified artifact, không nhầm partial download là file hợp lệ.
+- [x] Download theo chunks vào vùng tạm; kiểm tra MD5 trên đúng bytes trước parse, lưu thêm SHA256 cho provenance. Không đọc toàn bộ file vào RAM.
+- [x] File thiếu/checksum thiếu/checksum sai/download dở có trạng thái riêng, lỗi rõ và retry phù hợp; file lỗi không vào accepted Bronze/Silver.
+- [x] File identity gồm partner + business date + filename; content version theo checksum. Giữ expected/observed checksum, bytes, observed_at, version, run và row/rejection counts khi đã parse.
+- [x] Chỉ đánh dấu verified sau khi file local hoàn tất; retry tái dùng verified artifact, không nhầm partial download là file hợp lệ.
 
 #### S2-03 — Bronze và quarantine — DE
 
-- [ ] Giữ immutable source-file versions và lineage file/checksum/row; không append trùng khi cùng input chạy lại.
-- [ ] Required key null, invalid numeric/date/schema và conflict có quarantine/block policy; có source = accepted + rejected reconciliation.
-- [ ] Tách missing-file coverage khỏi rejected-row counts; không đếm file chưa parse như 0-row valid file.
+- [x] Giữ immutable source-file versions và lineage file/checksum/row; không append trùng khi cùng input chạy lại.
+- [x] Required key null, invalid numeric/date/schema và conflict có quarantine/block policy; có source = accepted + rejected reconciliation.
+- [x] Tách missing-file coverage khỏi rejected-row counts; không đếm file chưa parse như 0-row valid file.
 
 #### S2-04 — Silver marketplace — DE + reviewer
 
-- [ ] Normalize partner/status/date/product mapping; source IDs giữ theo nguồn. Unknown product phải được phát hiện; không tự tạo product nguồn giả.
-- [ ] `sale_price*quantity_sold` là merchandise; giữ nguyên `net_revenue`, `platform_discount`, `commission_rate`; completed eligible, returned/disputed tách riêng.
-- [ ] Source-target amount reconciliation exact Decimal. P03 có 14 dòng lệch Decimal floor lý tưởng 1 VND nhưng khớp float formula nguồn ở baseline cũ: gắn warning có bằng chứng, không sửa reported net hoặc nới tolerance cho mọi sai lệch.
-- [ ] File replacement có cơ chế active version; nếu bản mới bỏ một dòng, current accepted dataset phải bỏ đóng góp của dòng cũ trong phạm vi file, vẫn giữ audit. MERGE-only không được để sót dòng cũ.
+- [x] Normalize partner/status/date/product mapping; source IDs giữ theo nguồn. Unknown product phải được phát hiện; không tự tạo product nguồn giả.
+- [x] `sale_price*quantity_sold` là merchandise; giữ nguyên `net_revenue`, `platform_discount`, `commission_rate`; completed eligible, returned/disputed tách riêng.
+- [x] Source-target amount reconciliation exact Decimal. P03 có 14 dòng lệch Decimal floor lý tưởng 1 VND nhưng khớp float formula nguồn ở baseline cũ: gắn warning có bằng chứng, không sửa reported net hoặc nới tolerance cho mọi sai lệch.
+- [x] File replacement có cơ chế active version; nếu bản mới bỏ một dòng, current accepted dataset phải bỏ đóng góp của dòng cũ trong phạm vi file, vẫn giữ audit. MERGE-only không được để sót dòng cũ.
 
 #### S2-05 — Chuẩn bị conformed keys và helper đa nguồn — DE + reviewer
 
-- [ ] `merge_fact` hiện hardcode `source_system=postgres/shopvn`: tham số hóa/chuẩn hóa source identity trước khi ghi marketplace, giữ tương thích direct và tách data_origin.
-- [ ] `build_dimensions` hiện thay dim_channel bằng seed direct-only: đổi sang stable shared seed/upsert, không xóa marketplace channels khi Finance direct chạy sau.
-- [ ] `validate_gold_counts` hiện đối soát toàn bảng fact_sales_line với direct source: chuyển kiểm tra direct về đúng source scope, đồng thời giữ uniqueness toàn bộ business keys.
-- [ ] Date/product lookups không advance/backdate SCD bằng file tháng 6; giữ observed/fallback labels. Marketplace không có customer/voucher hợp lệ dùng unknown 0, không nối external_order_id sang orders PostgreSQL.
+- [x] `merge_fact` hiện hardcode `source_system=postgres/shopvn`: tham số hóa/chuẩn hóa source identity trước khi ghi marketplace, giữ tương thích direct và tách data_origin.
+- [x] `build_dimensions` hiện thay dim_channel bằng seed direct-only: đổi sang stable shared seed/upsert, không xóa marketplace channels khi Finance direct chạy sau.
+- [x] `validate_gold_counts` hiện đối soát toàn bảng fact_sales_line với direct source: chuyển kiểm tra direct về đúng source scope, đồng thời giữ uniqueness toàn bộ business keys.
+- [x] Date/product lookups không advance/backdate SCD bằng file tháng 6; giữ observed/fallback labels. Marketplace không có customer/voucher hợp lệ dùng unknown 0, không nối external_order_id sang orders PostgreSQL.
 
-Ba điểm code trên đã được đọc trong baseline hiện hành; chúng là **việc phải làm trong S2**, chưa được sửa khi lập kế hoạch. Nếu đổi sang một model đích khác thay vì conformed fact đã chọn, phải qua kiểm soát thay đổi, không tự né regression bằng một fact trùng lặp.
+Ba điểm code này là giới hạn ở mốc lập kế hoạch; đã được sửa trong S2 và kiểm chứng bằng direct-after-marketplace regression. Nếu đổi sang một model đích khác thay vì conformed fact đã chọn, phải qua kiểm soát thay đổi, không tự né regression bằng một fact trùng lặp.
 
 #### S2-06 — Gold và Finance marts — DE
 
-- [ ] Build marketplace sales-line contribution với key có source namespace, product/channel/date/settlement dimensions và lineage.
-- [ ] FIN04 merchandise, FIN05 reported net, FIN06 implied deduction và FIN07 settlement schedule có grain/eligibility rõ; không gọi T+15 là bank cash đã nhận.
-- [ ] FIN10 dùng direct FIN01 + marketplace FIN04 trước refund/commission; không cộng FIN05 thêm lần nữa. FIN11 distinct order có source namespace, FIN12 tính lại tử/mẫu cùng scope, không average daily ratios.
-- [ ] Không nhân measures khi join dimensions/facts; tháng thiếu file có coverage/partial label và tổng quan sát, không khẳng định tổng thực đầy đủ.
+- [x] Build marketplace sales-line contribution với key có source namespace, product/channel/date/settlement dimensions và lineage.
+- [x] FIN04 merchandise, FIN05 reported net, FIN06 implied deduction và FIN07 settlement schedule có grain/eligibility rõ; không gọi T+15 là bank cash đã nhận.
+- [x] FIN10 dùng direct FIN01 + marketplace FIN04 trước refund/commission; không cộng FIN05 thêm lần nữa. FIN11 distinct order có source namespace, FIN12 tính lại tử/mẫu cùng scope, không average daily ratios.
+- [x] Không nhân measures khi join dimensions/facts; tháng thiếu file có coverage/partial label và tổng quan sát, không khẳng định tổng thực đầy đủ.
 
 #### S2-07 — Validation gate và publication — DE + reviewer
 
-- [ ] Candidate đối soát source counts/units/amount theo partner/day; direct contribution cũng có lineage/snapshot được kiểm tra, không đọc trộn các phiên bản tùy ý.
-- [ ] Ghi input file versions, reference table snapshot IDs, data_as_of, published_at, completeness và rule version cho publication.
-- [ ] Failed gate không thay certified output của scope đó. Một partner fail không xóa publication hợp lệ của partner khác; tổng liên nguồn phải phản ánh coverage.
-- [ ] Restart trước/sau commit/publication không nhân dòng hoặc đánh dấu thành công giả; không tuyên bố multi-table exactly-once chỉ nhờ một Iceberg MERGE.
+- [x] Candidate đối soát source counts/units/amount theo partner/day; direct contribution cũng có lineage/snapshot được kiểm tra, không đọc trộn các phiên bản tùy ý.
+- [x] Ghi input file versions, reference table snapshot IDs, data_as_of, published_at, completeness và rule version cho publication.
+- [x] Failed gate không thay certified output của scope đó. Một partner fail không xóa publication hợp lệ của partner khác; tổng liên nguồn phải phản ánh coverage.
+- [x] Restart trước/sau commit/publication không nhân dòng hoặc đánh dấu thành công giả; không tuyên bố multi-table exactly-once chỉ nhờ một Iceberg MERGE.
 
 #### S2-08 — Airflow và backfill/rerun — Platform + DE
 
-- [ ] DAG nhận partner/date range, catchup=False có lý do; dependency, retries, timeout và pool/writer lock dùng chung với S1.
-- [ ] Late arrival có bounded wait/reschedule rồi partial run; targeted rerun cập nhật completeness và đúng file version, không treo vô hạn trước 08:00.
-- [ ] Batch backfill June dùng files/provenance đúng kỳ; không apply lại Finance snapshot cũ hơn dimension watermark hoặc dựng inventory June.
-- [ ] Finalizer không che upstream failure; phân biệt workflow hoàn thành xử lý phần hợp lệ với coverage complete và publication được phê chuẩn.
+- [x] DAG nhận partner/date range, catchup=False có lý do; dependency, retries, timeout và pool/writer lock dùng chung với S1.
+- [x] Late arrival có bounded wait/reschedule rồi partial run; targeted rerun cập nhật completeness và đúng file version, không treo vô hạn trước 08:00.
+- [x] Batch backfill June dùng files/provenance đúng kỳ; không apply lại Finance snapshot cũ hơn dimension watermark hoặc dựng inventory June.
+- [x] Finalizer không che upstream failure; phân biệt workflow hoàn thành xử lý phần hợp lệ với coverage complete và publication được phê chuẩn.
 
 Nguồn file được bake sẵn; LATE trong failure manifest là tình huống thiết kế, không chứng minh delayed live arrival. Dùng fixtures/mock clock có ghi nhãn để kiểm thử; không sửa nguồn SFTP để giả là lỗi tự nhiên.
 
 #### S2-09 — Monitoring và incident runbook — Platform + reviewer
 
-- [ ] Dashboard thể hiện expected/verified/missing/rejected files, coverage partner/day, last observation/publication, reconciliation delta và excluded/formula-warning counts.
-- [ ] Có alert local cho checksum mismatch, scope publication block và quá hạn thiếu file; manual June demo không làm daily freshness tháng hiện tại thành đạt.
-- [ ] Runbook cho missing/late, checksum mismatch, replacement và fail-mid-run; hướng dẫn nhận diện scope, rerun đúng artifact và xác nhận sau phục hồi.
-- [ ] Không gửi email/Slack nếu chưa có cấu hình người nhận và yêu cầu gửi đã được duyệt; local alert không được ghi là outbound notification đã test.
+- [x] Dashboard thể hiện expected/verified/missing/rejected files, coverage partner/day, last observation/publication, reconciliation delta và excluded/formula-warning counts.
+- [x] Có alert local cho checksum mismatch, scope publication block và quá hạn thiếu file; manual June demo không làm daily freshness tháng hiện tại thành đạt.
+- [x] Runbook cho missing/late, checksum mismatch, replacement và fail-mid-run; hướng dẫn nhận diện scope, rerun đúng artifact và xác nhận sau phục hồi.
+- [x] Không gửi email/Slack nếu chưa có cấu hình người nhận và yêu cầu gửi đã được duyệt; local alert không được ghi là outbound notification đã test.
 
 #### S2-10 — Nghiệm thu và bàn giao — reviewer + trưởng nhóm
 
-- [ ] Hoàn thành ma trận test bên dưới, chạy lại regression S1 bị ảnh hưởng.
-- [ ] Ghi evidence aggregate từ lệnh đã chạy; không commit file raw/PII/secrets. Evidence phân biệt source thật, fixture và phần chỉ thiết kế.
-- [ ] Cập nhật data dictionary, load contract, code map, DAG/runbook, tiến độ tại tài liệu này; review diff và đề nghị người dùng duyệt đóng S2.
+- [x] Hoàn thành ma trận test bên dưới, chạy lại regression S1 bị ảnh hưởng; self-verification, không tự nhận có reviewer độc lập.
+- [x] Evidence aggregate ghi kết quả actual source/DAG/Trino, 3 fresh-process replays, fixtures và giới hạn; không commit raw/PII/secrets.
+- [ ] Nhóm review code/evidence và xác nhận đóng S2. Tài liệu mapping/code/DAG/runbook đã được đồng bộ; chưa tự ký thay người dùng.
 
 ### 5.4 Ma trận kiểm thử bắt buộc S2
 
@@ -198,11 +200,11 @@ Nguồn file được bake sẵn; LATE trong failure manifest là tình huống 
 
 ### 5.5 Cổng đóng S2
 
-- [ ] S2-01…S2-10 và S2-T01…S2-T12 có bằng chứng hoặc ngoại lệ cụ thể được duyệt, không chỉ có code.
-- [ ] Actual SFTP pipeline chạy hết phạm vi June được chọn, đối soát nguồn/Spark/Trino; missing/corrupt không bị coi là complete.
-- [ ] 3 fresh-process replays pass và ít nhất một actual Airflow failure/recovery pass; direct regression pass.
-- [ ] Có mart Finance marketplace/cross-channel đúng basis, truy vấn được và có publication metadata.
-- [ ] Review/handoff đã hoàn tất. Chưa đi tiếp S3 chỉ vì container SFTP chạy hoặc một file mẫu pass.
+- [x] S2-01…S2-09 và S2-T01…S2-T12 có bằng chứng tự kiểm thử; S2-10 còn bước review/duyệt của nhóm.
+- [x] Actual SFTP pipeline chạy toàn 01–30/06 cho ba partner; source/Spark/Trino khớp, 3 missing + 2 corrupt vẫn có nhãn partial.
+- [x] 3 fresh-process replays và actual Airflow failure/recovery pass; direct-after-marketplace regression pass.
+- [x] Mart Finance marketplace/cross-channel và settlement views đúng basis, có source lineage/publication metadata.
+- [ ] Nhóm review/handoff và ký đóng stage. S3–S7 vẫn chờ duyệt, không tự mở stage tiếp theo.
 
 ## 6. S3–S7 — Đề xuất chi tiết chờ duyệt thứ tự
 
@@ -359,5 +361,6 @@ Stage tiếp theo đã được duyệt / task đầu tiên:
 | PL-001 | 12/11/2026 | Khôi phục định danh đúng **S2 = SFTP + Finance marketplace** theo người dùng nhắc lại; dòng "bước tiếp theo Kafka" ở readiness là ghi nhận sai, không phải tối ưu đã duyệt | Đã xác nhận |
 | PL-002 | 12/11/2026 | Tạo nguồn kế hoạch thống nhất; tách P1–P3 tiền triển khai khỏi S1–S7 MVP; thêm checklist và kiểm soát CR | Theo yêu cầu tạo tài liệu |
 | PL-003 | 12/11/2026 | Đề xuất S3 API, S4 marts còn thiếu, S5 streaming, S6 BI, S7 nghiệm thu | **Chờ người dùng duyệt thứ tự** |
+| PL-004 | 12/11/2026 | Người dùng yêu cầu hoàn thiện S2; triển khai SFTP/marketplace Finance, self-tests và evidence, không tự triển khai S3/Kafka/Superset | Implementation/self-verification PASS; chờ nhóm review đóng stage |
 
-Việc cần làm ngay sau tài liệu này, khi người dùng yêu cầu triển khai: **S2-01**, không phải dựng Kafka. Không cần chờ S3–S7 được chốt hết mới thực hiện phần S2 đã xác nhận.
+Việc cần làm sau bàn giao S2: **nhóm review S2-10 và xác nhận đóng stage**, đồng thời duyệt thứ tự S3–S7. Không tự bắt đầu Kafka hoặc một stage chưa được phê duyệt. Đây là cập nhật tiến độ, không đổi thứ tự/phạm vi hoặc business rule version.

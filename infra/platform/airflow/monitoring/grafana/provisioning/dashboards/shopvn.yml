@@ -3,5 +3,6 @@ providers:
   - name: ShopVN
     folder: ShopVN
     type: file
+    updateIntervalSeconds: 30
     options:
       path: /var/lib/grafana/dashboards

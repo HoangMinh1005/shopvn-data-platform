@@ -139,7 +139,12 @@ def main():
         assert all(status["services"].values()), "One of the observed services is unhealthy"
         assert status["latest_run"]["published"] and status["latest_run"]["dq_passed"]
         assert status["latest_run"]["amount_delta"] == "0.00"
-        assert not status["open_alerts"], "Failure alerts were not resolved by the successful rerun"
+        from shopvn.orchestration.ops import run_key
+
+        tested_keys = {run_key(blocked_id), run_key(recovery)}
+        assert not any(a["run_key"] in tested_keys for a in status["open_alerts_by_run"]), (
+            "Failure alerts for the tested direct runs were not resolved"
+        )
         report["monitor_status"] = status
         report["certified_snapshot_id"] = certified_snapshot()
         report["fin02_total_vnd"] = trino_query(

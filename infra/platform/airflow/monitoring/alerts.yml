@@ -40,3 +40,19 @@ groups:
         expr: shopvn_inventory_eod_missing == 1
         labels: {severity: critical}
         annotations: {summary: 'Actual EOD publication missing after 00:10 Vietnam'}
+      - alert: ShopVNMarketplaceFailed
+        expr: shopvn_marketplace_failed == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Marketplace workflow failed; inspect candidate/publication gate'}
+      - alert: ShopVNMarketplaceIncomplete
+        expr: shopvn_marketplace_file_count{state="missing"} + ignoring(state) shopvn_marketplace_file_count{state="rejected"} > 0
+        labels: {severity: warning}
+        annotations: {summary: 'Marketplace requested scope has missing/rejected files; published totals are partial'}
+      - alert: ShopVNMarketplaceReconciliation
+        expr: shopvn_marketplace_reconciliation_delta_vnd != 0
+        labels: {severity: critical}
+        annotations: {summary: 'Marketplace independent source/candidate amount mismatch'}
+      - alert: ShopVNMarketplaceDeadline
+        expr: shopvn_marketplace_deadline_missed == 1
+        labels: {severity: critical}
+        annotations: {summary: 'Current D-1 complete scheduled marketplace publication absent by 08:00 Vietnam'}

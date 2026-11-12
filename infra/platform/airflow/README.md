@@ -1,6 +1,6 @@
-# Airflow và giám sát — direct Finance local
+# Airflow và giám sát — direct + marketplace Finance và inventory local
 
-Phạm vi: đưa slice PostgreSQL → Spark/Iceberg → Trino hiện có vào Airflow, thêm audit, retry, publication gate và giám sát. Không triển khai Kafka/Superset, không thay đổi DB nguồn và không gửi email/Slack.
+Phạm vi: PostgreSQL/direct Finance, actual inventory và SFTP/marketplace Finance → Spark/Iceberg → Trino, có audit/retry/publication gate/giám sát. Không triển khai Kafka/Superset/API ingestion, không sửa nguồn và không gửi email/Slack.
 
 Application đã tách thành package theo [bản đồ code](../../../docs/architecture/code-structure.md). Cài package trên host trước khi chạy tools: `python -m pip install --no-deps -e .` hoặc uv tương đương. Container dùng PYTHONPATH=/workspace/src; không import runtime helpers từ scripts.
 
@@ -65,7 +65,9 @@ Extraction Finance là full snapshot 9 bảng trong một transaction READ ONLY/
 
 Dashboard tách ngày xử lý, ngày nghiệp vụ và source coverage; hiển thị service health, workflow state, FIN02 source/candidate, delta, DQ, last completion và alert. Spark là batch task, không bị báo down khi không có job. Số tiền trên Prometheus là float phục vụ hiển thị, **không** thay thế đối soát Decimal chính xác.
 
-9 rules: service down, pipeline failed, DQ gate failed, reconciliation mismatch, exporter down, polling stale, deadline 08:00, inventory failed và EOD missing sau 00:10. Grafana có 19 panels, trong đó 6 panels inventory tách Finance coverage. Monitor đọc PostgreSQL nguồn bằng SELECT 1 và kiểm tra Airflow API/scheduler/dag processor/metadata, platform PostgreSQL, MinIO, Trino. Không giám sát host CPU/disk/cAdvisor ở bước này.
+13 rules: 9 rules direct/inventory trước đó và 4 rules marketplace failed/incomplete/reconciliation/deadline. Grafana có 31 panels: core/direct, 6 inventory và 12 marketplace (coverage, business-date range, capture/publication clocks, rows/warnings, DQ/amount/deadline). Monitor có 9 service/component metrics: các health checks trước đó và SFTP TCP/SSH banner reachability, không thay host pin/authentication/checksum validation. Không giám sát host CPU/disk/cAdvisor ở bước này.
+
+S2 thêm DAG shopvn_marketplace_finance lúc 04:00 VN, manual date range/partner params, versioned file capture và pinned Trino candidate gate. Host tools cần package extra marketplace/Paramiko; image Airflow thêm Paramiko, Spark Python không import connector SFTP. Chạy scripts/bootstrap_marketplace.py để pin source public key local trước Compose; không tự overwrite pin khác. Xem [runbook S2](../../../docs/runbooks/stage2-marketplace-finance.md).
 
 Deadline 08:00 độc lập scheduler: sau 08:00 VN nếu chưa có scheduled success hoàn thành trước 08:00 hôm đó thì cảnh báo. Manual demo không thay thế scheduled success. `MONITOR_START_DATE` được bootstrap thành ngày mai để không phát cảnh báo hồi tố trước go-live. Hoàn thành trễ vẫn ghi nhận missed trong ngày. Cảnh báo chỉ hiển thị qua Prometheus/Grafana và audit; chưa có Alertmanager hay delivery ra ngoài.
 

@@ -1,6 +1,6 @@
 # Kiểm thử
 
-84 unit/reference tests: business rules, contracts, runtime paths, import boundaries, exact Decimal reconciliation, Airflow callbacks/finalizer, deadline và inventory cutoff. Spark suites có 4 base + 15 temporal cases trên engine thật, tách khỏi host pytest để không yêu cầu Java/PySpark trên máy host. Thêm 3 clock checks dùng actual Pendulum trong container Airflow.
+122 unit/reference tests: business rules, contracts, runtime paths, import boundaries, exact Decimal reconciliation, Airflow callbacks/finalizer, inventory cutoff và SFTP/marketplace. Spark suites có 4 base + 15 temporal + 10 marketplace cases trên engine thật, tách khỏi host pytest. S1 còn có 3 clock checks dùng actual Pendulum trong container Airflow; đây là bằng chứng riêng, không gộp như unit host.
 
 ## Unit / CI
 
@@ -48,6 +48,17 @@ python scripts/verify_airflow.py --business-date 2026-06-30
 Cần PostgreSQL nguồn và core/ops đang hoạt động. Negative test phải đi qua extract/transform thành công rồi fail đúng validate_candidate; lỗi nguồn không được tính thay cho DQ failure injection. Test tiếp theo fail DQ một lần, retry thành công, publish/post-check và resolve alerts.
 
 ## Phạm vi
+
+S2 runners và negative tests:
+
+```powershell
+docker compose --project-name shopvn-readiness --env-file .env -f infra/platform/spike/compose.yml run --rm --no-deps spark --master "local[2]" --driver-memory 1g /workspace/tests/integration/marketplace_spark.py
+python tests/integration/verify_marketplace_airflow.py
+python tests/integration/verify_stage2_replays.py
+python tests/integration/verify_marketplace_final.py
+```
+
+Spark fixtures dùng shopvn.stage2_tests với table destinations được inject: replacement bỏ dòng/empty/missing giữ bản cũ, source-aware schema evolution, seed channel bền vững, source namespace/AOV/null-vs-zero, candidate/parent/reference mutation, partial publish/retry và same-candidate no-op. Late timing dùng FakeSFTP/mock clock, không sửa source thật. Actual DAG test dùng restored SFTP và source SQL reference; 3 fresh-process candidates không publish. Direct verifier chỉ kiểm tra resolve alerts của đúng run test, không yêu cầu xóa unrelated marketplace incomplete warnings.
 
 Các runner storage/direct trước đó đã kiểm tra 3 fresh Spark processes và persistence qua restart. CI chạy unit/reference, package build, lint và Compose validation; chưa tự dựng full stack hoặc nguồn thật. [Evidence](../docs/verification/README.md) ghi rõ phần đã chạy.
 

@@ -6,4 +6,6 @@
 
 [Khả năng khôi phục PostgreSQL nguồn](source-postgres-recovery.md): kiểm tra read-only volume còn lại ngày 12/11/2026; chưa thực hiện restore/start nguồn.
 
+[S2 — SFTP và Finance marketplace](stage2-marketplace-finance.md): host pin, MD5-before-parse, versioned file manifest, replacement/rerun, partial coverage và DQ-gated publication. Runbook PostgreSQL recovery ở trên có cập nhật sau khi người dùng tự phục hồi nguồn; không dùng mốc outage cũ như current health.
+
 Không coi việc DAG thành công là bằng chứng dữ liệu đúng. Đối soát và completeness phải được kiểm tra trước publication.

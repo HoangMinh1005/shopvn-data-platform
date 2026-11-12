@@ -6,6 +6,10 @@ Thiết kế cột dựa trên [schema đã profiling](../profiling/observed-pro
 
 Runtime đầu tiên đã triển khai subset phục vụ direct Finance, xem [scope và evidence](../verification/README.md). Dictionary này vẫn là model đích đầy đủ; các field/dimension ngoài scope không được xem là đã deploy.
 
+S2 bổ sung marketplace rows vào conformed fact_sales_line: source_line_id canonical theo partner/order/product, partner_reported_net_amount, implied_partner_deduction, commission_rate, source_platform_discount, formula_delta_vnd, line_status, scheduled_settlement_date_key, file_version_id và product match basis. Không tạo marketplace fact_order header hoặc customer định danh giả.
+
+Certified mart_commerce_finance_daily có grain `(business_date,channel,report_type)`: report_type sales hoặc scheduled_settlement, report_date, comparable_merchandise, partner_reported_net, implied_partner_deduction, direct_net_customer_amount, eligible_orders, units_sold, aov_merchandise, coverage_status, marketplace_day_complete và source_observed_at. Lineage gồm publication_id, registry_snapshot_id, source_candidate_snapshot_id, data_as_of, prepared_at, published_at, rule_version/data_origin. Missing chưa có accepted version là NULL; verified empty file là 0, AOV NULL. Không sum hai report_type với nhau. [Runbook/mapping S2](../runbooks/stage2-marketplace-finance.md).
+
 ## Quy ước type và audit
 
 `!` = NOT NULL, `?` = nullable. `SK` = BIGINT surrogate key, unknown = 0. `DK` = INT YYYYMMDD, unknown = 0. `M` = DECIMAL(20,2), currency_code = VND. `TS` = TIMESTAMP UTC (Spark) với timezone contract; Trino đọc theo UTC và đổi local khi lấy business day. Không dùng FLOAT cho tiền. Với source created_at/last_updated không có timezone: Silver giữ TIMESTAMP_NTZ + source_timezone chưa xác nhận; cột Gold UTC tương ứng chưa được publish cho đến khi contract timezone đủ căn cứ, không tự áp server UTC.

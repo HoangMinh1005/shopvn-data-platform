@@ -120,3 +120,25 @@ def extract(paths: ProjectPaths | None = None, *, tables=None) -> Path:
 
 def main():
     extract()
+
+
+def finance_reference():
+    """Small independent SQL reference for cross-channel candidate validation; no exports/writes."""
+    load_env()
+    with psycopg.connect(
+        host=os.getenv("SHOPVN_DB_HOST", "127.0.0.1"),
+        port=os.getenv("SHOPVN_DB_HOST_PORT", "5434"),
+        dbname=os.getenv("SHOPVN_DB_NAME", "shopvn"),
+        user=os.environ["SHOPVN_DB_READER_USER"],
+        password=os.environ["SHOPVN_DB_READER_PASSWORD"],
+        row_factory=dict_row,
+        connect_timeout=5,
+        options="-c default_transaction_read_only=on -c statement_timeout=60000",
+    ) as conn:
+        conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+        statement = (
+            files("shopvn.ingestion")
+            .joinpath("sql/direct_revenue_baseline.sql")
+            .read_text(encoding="utf-8")
+        )
+        return conn.execute(statement).fetchall()

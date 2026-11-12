@@ -12,6 +12,8 @@ Baseline logic sau thảo luận với nhóm: **Medallion + star schema**, Icebe
 
 Bronze/Silver đã có đủ 9 bảng PostgreSQL. Gold có 5 dimensions (date/channel/customer/product/warehouse), 3 facts Finance và fact_inventory_daily_snapshot; analytics có mart_fin02_daily và current_stock. Inventory transactions và reviews hiện chỉ ở Bronze/Silver, chưa có Gold facts tương ứng. Các bảng còn lại bên dưới là model đích, không phải danh sách đã deploy.
 
+Sau S2, thêm Bronze/Silver marketplace và marketplace rows trong **cùng fact_sales_line conformed** với source-aware keys, không tạo fact trùng riêng để né đối soát direct. Certified mart_commerce_finance_daily và các view marketplace Finance/settlement/comparable merchandise có coverage, versioned registry và pinned candidate lineage. Customer marketplace unknown 0; settlement là schedule, không bank cash. [Runbook S2](../runbooks/stage2-marketplace-finance.md).
+
 Customer/product dùng SCD2 observed-time; lookup theo business key + order_date tại min(cuối ngày Việt Nam, thời điểm extract). Có nhãn observed_day_asof hoặc initial_snapshot_fallback, không khẳng định tier/cost tại giây mua hàng. EOD là actual source observation trong 60 giây đầu sau midnight theo [INV-CUTOFF-v1](../business/decisions/2026-11-11-inventory-cutoff.md). Xem [runbook và giới hạn](../runbooks/stage1-postgres-inventory.md).
 
 ## Dimensions dự kiến

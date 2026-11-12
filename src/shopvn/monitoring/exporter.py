@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import threading
 import time
 import urllib.request
@@ -65,6 +66,44 @@ INV_FAILED = Gauge("shopvn_inventory_failed", "Latest inventory workflow failed"
 INV_MISSING = Gauge(
     "shopvn_inventory_eod_missing", "Yesterday EOD absent after 00:10 VN, only since actual go-live"
 )
+MKT_FILES = Gauge(
+    "shopvn_marketplace_file_count",
+    "Latest requested file scope; not all historic publications",
+    ["state"],
+)
+MKT_FAILED = Gauge("shopvn_marketplace_failed", "Latest marketplace workflow failed")
+MKT_COMPLETE = Gauge(
+    "shopvn_marketplace_complete", "Latest requested all-partner coverage complete"
+)
+MKT_GATE = Gauge("shopvn_marketplace_gate_passed", "Latest DQ gate; NaN before validation")
+MKT_AMOUNT = Gauge(
+    "shopvn_marketplace_reported_net_vnd",
+    "Candidate reported net; exact reconciliation remains Decimal",
+)
+MKT_DELTA = Gauge(
+    "shopvn_marketplace_reconciliation_delta_vnd",
+    "Candidate minus independent source; NaN when unchecked",
+)
+MKT_DEADLINE = Gauge(
+    "shopvn_marketplace_deadline_missed",
+    "Current D-1 complete scheduled publication absent by 08:00 VN",
+)
+MKT_ROWS = Gauge(
+    "shopvn_marketplace_row_count", "Active scope accepted/excluded/formula-warning rows", ["kind"]
+)
+MKT_DATES = Gauge(
+    "shopvn_marketplace_business_date_timestamp_seconds",
+    "Requested business date encoded as UTC midnight, not processing time",
+    ["boundary"],
+)
+MKT_CAPTURE = Gauge(
+    "shopvn_marketplace_capture_completed_timestamp_seconds",
+    "Most recent SFTP capture completion; not business date",
+)
+MKT_FINISH = Gauge(
+    "shopvn_marketplace_last_publication_check_timestamp_seconds",
+    "Last successful publication check, including partial publications",
+)
 
 
 def http_health(url):
@@ -117,6 +156,19 @@ def poll():
             HEALTH.labels("source_postgres").set(0)
             values["source_postgres"] = False
         try:
+            with socket.create_connection(
+                (
+                    os.getenv("SHOPVN_SFTP_HOST", "host.docker.internal"),
+                    int(os.getenv("SHOPVN_SFTP_HOST_PORT", "2222")),
+                ),
+                timeout=3,
+            ) as sftp_socket:
+                sftp_up = sftp_socket.recv(64).startswith(b"SSH-")
+        except OSError:
+            sftp_up = False
+        HEALTH.labels("source_sftp").set(sftp_up)
+        values["source_sftp"] = sftp_up
+        try:
             with ops.connection() as conn:
                 latest = conn.execute(
                     "SELECT * FROM ops.pipeline_run ORDER BY started_at DESC LIMIT 1"
@@ -132,6 +184,9 @@ def poll():
                 alerts = conn.execute(
                     "SELECT kind,count(*) n FROM ops.alert WHERE resolved_at IS NULL GROUP BY kind"
                 ).fetchall()
+                alert_runs = conn.execute(
+                    "SELECT run_key,kind,count(*) n FROM ops.alert WHERE resolved_at IS NULL GROUP BY run_key,kind"
+                ).fetchall()
                 inventory = conn.execute(
                     "SELECT * FROM ops.inventory_run ORDER BY started_at DESC LIMIT 1"
                 ).fetchone()
@@ -141,9 +196,73 @@ def poll():
                 last_eod = conn.execute(
                     "SELECT max(business_date) AS last_business_date FROM ops.inventory_run WHERE status='success' AND eod_published=true"
                 ).fetchone()["last_business_date"]
+                marketplace = conn.execute(
+                    "SELECT * FROM ops.marketplace_run ORDER BY started_at DESC LIMIT 1"
+                ).fetchone()
+                marketplace_finished = conn.execute(
+                    "SELECT max(finished_at) t FROM ops.marketplace_run WHERE published=true AND status='success'"
+                ).fetchone()["t"]
+                marketplace_scheduled = conn.execute("""SELECT max(finished_at) t FROM ops.marketplace_run WHERE status='success'
+                    AND run_type='scheduled' AND coverage_complete=true
+                    AND end_date=(now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date-1
+                    AND start_date=end_date""").fetchone()["t"]
             HEALTH.labels("platform_postgres").set(1)
             values["platform_postgres"] = True
             now = datetime.now(timezone.utc)
+            MKT_DEADLINE.set(
+                deadline_missed(
+                    now, date.fromisoformat(os.environ["MONITOR_START_DATE"]), marketplace_scheduled
+                )
+            )
+            if marketplace:
+                for label, column in (("start", "start_date"), ("end", "end_date")):
+                    MKT_DATES.labels(label).set(
+                        datetime.combine(
+                            marketplace[column], datetime.min.time(), timezone.utc
+                        ).timestamp()
+                    )
+                MKT_CAPTURE.set(
+                    marketplace["capture_completed_at"].timestamp()
+                    if marketplace["capture_completed_at"]
+                    else float("nan")
+                )
+                MKT_FINISH.set(
+                    marketplace_finished.timestamp() if marketplace_finished else float("nan")
+                )
+                for label, column in (
+                    ("accepted", "accepted_rows"),
+                    ("excluded_status", "excluded_status_rows"),
+                    ("formula_warning", "formula_warnings"),
+                ):
+                    MKT_ROWS.labels(label).set(
+                        marketplace[column] if marketplace[column] is not None else float("nan")
+                    )
+                MKT_FAILED.set(marketplace["status"] == "failed")
+                MKT_COMPLETE.set(marketplace["coverage_complete"])
+                for label, column in (
+                    ("expected", "expected_files"),
+                    ("verified", "verified_files"),
+                    ("missing", "missing_files"),
+                    ("rejected", "rejected_files"),
+                ):
+                    MKT_FILES.labels(label).set(
+                        marketplace[column] if marketplace[column] is not None else float("nan")
+                    )
+                MKT_GATE.set(
+                    float("nan")
+                    if marketplace["gate_passed"] is None
+                    else marketplace["gate_passed"]
+                )
+                MKT_AMOUNT.set(
+                    float(marketplace["reported_net"])
+                    if marketplace["reported_net"] is not None
+                    else float("nan")
+                )
+                MKT_DELTA.set(
+                    float(marketplace["reconciliation_delta"])
+                    if marketplace["reconciliation_delta"] is not None
+                    else float("nan")
+                )
             INV_MISSING.set(
                 eod_publication_missing(
                     now, date.fromisoformat(os.environ["INVENTORY_GO_LIVE_DATE"]), last_eod
@@ -204,7 +323,9 @@ def poll():
                 "inventory": inventory,
                 "inventory_current": inventory_current,
                 "last_eod_business_date": last_eod,
+                "marketplace": marketplace,
                 "open_alerts": alerts,
+                "open_alerts_by_run": alert_runs,
                 "last_poll": now.isoformat(),
             }
         except Exception as exc:

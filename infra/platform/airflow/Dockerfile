@@ -5,4 +5,5 @@ RUN python -m venv /opt/airflow-venv && /opt/airflow-venv/bin/pip install --no-c
     'psycopg[binary]' prometheus-client --constraint /opt/airflow-constraints.txt
 ENV PATH=/opt/airflow-venv/bin:/opt/spark/bin:/usr/local/bin:/usr/bin:/bin \
     AIRFLOW_HOME=/opt/airflow PYTHONPATH=/workspace/src:/opt/airflow/plugins
+RUN /opt/airflow-venv/bin/pip install --no-cache-dir 'paramiko==5.1.0'
 WORKDIR /workspace

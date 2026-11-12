@@ -40,10 +40,10 @@ def main():
         + "/api/datasources/proxy/uid/shopvn-prometheus/api/v1/query?query=shopvn_service_up",
         headers={"Authorization": "Basic " + basic},
     )
-    assert result["status"] == "success" and len(result["data"]["result"]) == 8
+    assert result["status"] == "success" and len(result["data"]["result"]) == 9
     assert all(metric["value"][1] == "1" for metric in result["data"]["result"])
     evidence["grafana"]["prometheus_proxy_query"] = (
-        "passed; 8 observed service/component metrics healthy"
+        "passed; 9 observed service/component metrics healthy including SFTP SSH reachability"
     )
     code = """import hashlib,json,importlib.metadata as m
 from pathlib import Path

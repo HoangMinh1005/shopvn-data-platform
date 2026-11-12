@@ -4,9 +4,43 @@ Ngày thực hiện: 2026-11-11. Core storage spike, direct Finance và Airflow/
 
 Cập nhật sau refactor: [refactor evidence](refactor.json) và [bản đồ code](../architecture/code-structure.md). Các kết quả Airflow hiện đã được chạy lại với package/tầng xử lý mới.
 
+## S2 — Implementation/self-verification PASS ngày 12/11/2026
+
+[Evidence aggregate S2](stage2.json), [runbook S2](../runbooks/stage2-marketplace-finance.md), [kế hoạch/checklist](../architecture/mvp-implementation-plan.md). Đây là self-verification kỹ thuật; nhóm còn review và xác nhận đóng stage. Không tự mở S3/Kafka/Superset.
+
+- Đọc lại actual SFTP với pinned host key, streaming download và MD5 trước parse: **85 verified, 3 missing, 2 checksum mismatch**, 63103 accepted rows. Completed 55481; returned/disputed 7622 bị loại khỏi eligible sales, vẫn giữ audit. 14 formula warnings -1 VND có căn cứ float-source, không sửa reported net.
+- FIN04 merchandise marketplace = **669605697060.00 VND**; FIN05 reported net = **606161750704.00 VND**. Đây là tổng quan sát **partial**, không phải đủ toàn tháng hoặc bank cash. Settlement schedule T+15 tách view, không cộng lẫn sales và settlement.
+- Shared fact_sales_line có **444142 direct + 63103 marketplace = 507245 unique keys**. Direct-after-marketplace actual Airflow regression pass, FIN02 vẫn **1648602104364.00 VND**, channel keys không bị xóa.
+- Actual marketplace DAG chạy source → Spark/Iceberg → Trino. Intentional DQ failure retry 3 lần, publish bị chặn và existing certified snapshot không đổi. Recovery validate lần 2 rồi success; final smoke tất cả task attempt 1. Source không bị sửa để tạo lỗi.
+- 122 unit tests, **4 base + 15 temporal + 10 marketplace Spark cases**, 3 fresh-process marketplace candidates pass; count/sum không đổi và certified mart snapshot không bị candidate-only replays thay thế. Fixtures chỉ ghi namespace test; source clock/late arrival giả lập được ghi rõ.
+- Same-candidate publication retry no-op; candidate/parent/reference thay đổi bị block. File replacement bỏ dòng và empty replacement được kiểm tra qua pipeline thật trên fixtures; missing/corrupt replacement giữ last accepted với retained_unverified. Partial publish trước certified commit có recovery test, không claim multi-table atomicity.
+- 9 service/component checks healthy, **31 Grafana panels provisioned qua API**, 13 Prometheus rules valid/loaded. Đã sửa Grafana file provisioning sang polling 30 giây cho Windows/Docker mount; không dùng số panels trong JSON thay bằng chứng API.
+- Wheel/source bytes khớp và isolated job import/SQL resource pass. Image ops đã build/restart cho Paramiko; source/PII/secrets/runtime không vào Git.
+
+Source date chỉ June 2026; actual capture/processing là November. Historical partial success không chứng minh current D−1 freshness hoặc SLA 08:00. Cảnh báo incomplete và current deadline có thể còn đúng chủ đích, không xóa để xanh dashboard. API ingestion, Kafka, Superset, outbound notification, full HA/load/restore certification vẫn ngoài S2.
+
+### Traceability ma trận S2
+
+| ID | Bằng chứng đã chạy |
+|---|---|
+| S2-T01 | Actual 85 verified files → independent parser baseline → Spark → pinned Trino sales/fact/settlement reconciliation |
+| S2-T02 | Actual 3 missing/2 mismatch, unit missing/MD5-missing/parser-refusal; mart NULL cho unavailable scopes |
+| S2-T03 | 3 fresh Spark processes cùng immutable actual capture, 63103 rows/606161750704.00 VND, certified snapshot không đổi |
+| S2-T04 | Unit valid-payload conflict và duplicate quarantine/count balance; active cross-file key gate |
+| S2-T05 | Full pipeline fixture: original → bad replacement giữ bản cũ → bỏ dòng → empty replacement, direct preserved/Bronze retained |
+| S2-T06 | Unit interrupted transfer không có verified artifact; actual DQ fail/retry; fixture partial fact write trước mart commit và recovery/no-op. Không claim đã OS-kill source/container |
+| S2-T07 | FakeSFTP + mock clock bounded late arrival, registry targeted update; không claim delayed live arrival từ nguồn bake sẵn |
+| S2-T08 | Unit extra/missing columns, invalid numeric/overflow/date/status, blocking row quarantine |
+| S2-T09 | Actual 14 warnings và unit narrow -1 float-source tolerance/unexplained delta rejection |
+| S2-T10 | Actual direct-after-marketplace failure/recovery, FIN02 stable; Spark channel/source-aware helper/schema evolution |
+| S2-T11 | Spark same order ID giữa nguồn/multi-line AOV và global namespace uniqueness, source/Trino count checks |
+| S2-T12 | Actual LocalExecutor/Spark/source/Trino DQ failure → recovery, final smoke, ops/Prometheus/Grafana API |
+
+Các báo cáo S1/refactor bên dưới là lịch sử theo scope/thời điểm ghi nhận, không phải danh sách tính năng S2 còn thiếu.
+
 ## Chặng 1 — PASS ngày 12/11/2026
 
-[Bằng chứng aggregate chặng 1](stage1.json) là trạng thái mới nhất; các báo cáo storage/direct/refactor bên dưới giữ làm mốc lịch sử.
+[Bằng chứng aggregate chặng 1](stage1.json) là mốc S1; các báo cáo storage/direct/refactor bên dưới giữ làm mốc lịch sử. Trạng thái S2 nằm ở phần đầu báo cáo.
 
 - Full snapshot đủ 9 bảng PostgreSQL trong transaction READ ONLY/REPEATABLE READ. Thêm inventory (2.000), inventory_transactions (439.722), product_reviews (41.226); không export review comment.
 - SCD2 observed-time customer/product, khoảng nửa mở và stable SK; day-as-of joins theo business key + order_date, không làm nhân fact rows. Chặn overlap, nhiều current, same-clock conflict và stale Finance apply. June facts vẫn có nhãn initial_snapshot_fallback, không suy tier/cost tại thời điểm mua.

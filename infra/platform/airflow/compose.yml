@@ -28,6 +28,11 @@ x-airflow: &airflow
     SHOPVN_DB_NAME: ${SHOPVN_DB_NAME:-shopvn}
     SHOPVN_DB_READER_USER: ${SHOPVN_DB_READER_USER:-shopvn_reader}
     SHOPVN_DB_READER_PASSWORD: ${SHOPVN_DB_READER_PASSWORD:?Set source reader password}
+    SHOPVN_SFTP_HOST: ${SHOPVN_SFTP_HOST:-host.docker.internal}
+    SHOPVN_SFTP_HOST_PORT: ${SHOPVN_SFTP_HOST_PORT:-2222}
+    SHOPVN_SFTP_USER: ${SHOPVN_SFTP_USER:-marketplace_reader}
+    SHOPVN_SFTP_PASSWORD: ${SHOPVN_SFTP_PASSWORD:?Set SFTP reader password}
+    SHOPVN_SFTP_HOST_KEY_SHA256: ${SHOPVN_SFTP_HOST_KEY_SHA256:?Pin source SFTP host key}
     SPIKE_DB_PASSWORD: ${SPIKE_DB_PASSWORD:?Set catalog password}
     SPIKE_MINIO_USER: ${SPIKE_MINIO_USER:?Set object store user}
     SPIKE_MINIO_PASSWORD: ${SPIKE_MINIO_PASSWORD:?Set object store password}

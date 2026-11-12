@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 ingestion = ["psycopg[binary]>=3.3,<4"]
+marketplace = ["paramiko>=5.1,<6"]
 monitoring = ["psycopg[binary]>=3.3,<4", "prometheus-client>=0.26,<0.27"]
 
 [project.scripts]
@@ -18,6 +19,8 @@ shopvn-extract = "shopvn.ingestion.postgres:main"
 shopvn-finance = "shopvn.jobs.direct_finance:main"
 shopvn-publish-finance = "shopvn.jobs.publish_finance:main"
 shopvn-inventory = "shopvn.jobs.inventory:main"
+shopvn-marketplace-extract = "shopvn.ingestion.sftp:main"
+shopvn-marketplace = "shopvn.jobs.marketplace:main"
 shopvn-monitor = "shopvn.monitoring.exporter:main"
 
 [tool.setuptools.packages.find]

@@ -75,6 +75,9 @@ def validate_gold_counts(spark, manifest):
         ("fact_return", "returns", "return_key"),
     ):
         persisted = spark.table(f"shopvn.gold.{table_name}")
+        if persisted.select(primary_key).distinct().count() != persisted.count():
+            raise ValueError(f"Duplicate global Gold identity: {table_name}")
+        persisted = persisted.filter("source_system='postgres/shopvn' AND data_origin='source'")
         fact_counts[table_name] = persisted.count()
         if fact_counts[table_name] != manifest["tables"][source_name]["rows"]:
             raise ValueError(f"Gold count reconciliation failed: {table_name}")

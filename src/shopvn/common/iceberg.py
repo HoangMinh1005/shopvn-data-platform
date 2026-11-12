@@ -26,15 +26,25 @@ def replace_table(spark, df, table: str, stage: Path):
     )
 
 
-def merge_fact(spark, df, table: str, key: str, observed_at: str, run_id: str):
+def merge_fact(
+    spark,
+    df,
+    table: str,
+    key: str,
+    observed_at: str,
+    run_id: str,
+    *,
+    source_system="postgres/shopvn",
+    data_origin="source",
+):
     business_columns = [c for c in df.columns if c not in {"snapshot_id", "source_record_hash"}]
     df = (
         with_hash(df, "business_hash", business_columns)
         .withColumn("observed_at", F.to_timestamp(F.lit(observed_at)))
         .withColumn("loaded_at", F.current_timestamp())
         .withColumn("run_id", F.lit(run_id))
-        .withColumn("source_system", F.lit("postgres/shopvn"))
-        .withColumn("data_origin", F.lit("source"))
+        .withColumn("source_system", F.lit(source_system))
+        .withColumn("data_origin", F.lit(data_origin))
     )
     if not spark.catalog.tableExists(table):
         df.writeTo(table).using("iceberg").tableProperty("format-version", "2").create()
@@ -45,6 +55,9 @@ def merge_fact(spark, df, table: str, key: str, observed_at: str, run_id: str):
                 spark.sql(
                     f"ALTER TABLE {table} ADD COLUMN `{field.name}` {field.dataType.simpleString()}"
                 )
+        for field in spark.table(table).schema.fields:
+            if field.name not in df.columns:
+                df = df.withColumn(field.name, F.lit(None).cast(field.dataType))
         df.createOrReplaceTempView("incoming_fact")
         spark.sql(f"""MERGE INTO {table} t USING incoming_fact s ON t.{key}=s.{key}
                   WHEN MATCHED AND t.business_hash<>s.business_hash THEN UPDATE SET *

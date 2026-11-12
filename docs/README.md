@@ -16,6 +16,8 @@ Bản đồ implementation sau refactor: [cấu trúc application](architecture/
 
 Chặng 1 đã có [runbook PostgreSQL/SCD2/inventory](runbooks/stage1-postgres-inventory.md), [quyết định cutoff EOD 60 giây đã duyệt](business/decisions/2026-11-11-inventory-cutoff.md) và [bằng chứng thực thi](verification/stage1.json). Finance rule version vẫn 1.1, source contract version 2 và inventory policy INV-CUTOFF-v1 là ba version riêng.
 
+S2 có [runbook SFTP/marketplace Finance](runbooks/stage2-marketplace-finance.md) và [evidence aggregate](verification/stage2.json): implementation/self-verification PASS, chờ nhóm review/đóng stage. Source contract marketplace version 1 không thay business rule 1.1 hoặc PostgreSQL contract version 2.
+
 ## Vị trí tài liệu
 
 | Thư mục | Nội dung |

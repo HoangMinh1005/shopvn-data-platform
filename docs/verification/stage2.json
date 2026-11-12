@@ -1,0 +1,712 @@
+{
+  "status": "passed",
+  "verified_at_utc": "2026-11-12T09:01:35.192584+00:00",
+  "scope": "S2 actual SFTP + marketplace/cross-channel Finance; local single node; no API/Kafka/Superset",
+  "unit_tests": {
+    "tests": 122,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "marketplace_spark": {
+    "status": "passed",
+    "tests": 10,
+    "errors": 0,
+    "failures": 0,
+    "scope": "Synthetic tables only in shopvn.stage2_tests; no source mutations"
+  },
+  "base_spark_regression": {
+    "status": "passed",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  "temporal_spark_regression": {
+    "status": "passed",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Synthetic data in isolated shopvn.stage1_tests; not actual inventory history"
+  },
+  "airflow_marketplace": {
+    "status": "passed",
+    "source": "Actual restored SFTP; no source mutations",
+    "before_snapshot": 4327926824913739876,
+    "blocked": {
+      "run_id": "manual__s2_blocked_20261112T082857672681",
+      "state": "failed",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "capture_source",
+          "success",
+          1
+        ],
+        [
+          "prepare_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "upstream_failed",
+          0
+        ],
+        [
+          "verify_and_finish",
+          "upstream_failed",
+          0
+        ],
+        [
+          "finalize",
+          "failed",
+          1
+        ],
+        [
+          "validate_candidate",
+          "failed",
+          3
+        ]
+      ]
+    },
+    "after_blocked_snapshot": 4327926824913739876,
+    "recovery": {
+      "run_id": "manual__s2_recovery_20261112T083036811367",
+      "state": "success",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "capture_source",
+          "success",
+          1
+        ],
+        [
+          "prepare_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "success",
+          1
+        ],
+        [
+          "verify_and_finish",
+          "success",
+          1
+        ],
+        [
+          "finalize",
+          "success",
+          1
+        ],
+        [
+          "validate_candidate",
+          "success",
+          2
+        ]
+      ]
+    },
+    "after_recovery_snapshot": 4291438684944889303,
+    "published_totals": [
+      [
+        "direct_app",
+        30,
+        "663625520691.00",
+        null
+      ],
+      [
+        "direct_web",
+        30,
+        "1003111677283.00",
+        null
+      ],
+      [
+        "lazada",
+        30,
+        "194029574690.00",
+        "176617926552.00"
+      ],
+      [
+        "shopee",
+        30,
+        "342201030331.00",
+        "306236237684.00"
+      ],
+      [
+        "tiktok",
+        30,
+        "133375092039.00",
+        "123307586468.00"
+      ]
+    ]
+  },
+  "direct_after_marketplace": {
+    "started_at_utc": "2026-11-12T08:21:19.447703+00:00",
+    "status": "passed",
+    "business_date": "2026-06-30",
+    "scope": "actual LocalExecutor/Spark/Trino; local Prometheus/Grafana; no Kafka, Superset or outbound notifications",
+    "blocked": {
+      "dag_run_id": "manual__verify_blocked_20261112T082120374021",
+      "state": "failed",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "extract_snapshot",
+          "success",
+          1
+        ],
+        [
+          "transform_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "upstream_failed",
+          0
+        ],
+        [
+          "verify_and_finish",
+          "upstream_failed",
+          0
+        ],
+        [
+          "finalize",
+          "failed",
+          1
+        ],
+        [
+          "validate_candidate",
+          "failed",
+          3
+        ]
+      ]
+    },
+    "publication_unchanged_on_failure": {
+      "before_snapshot_id": 4439366277889630999,
+      "after_snapshot_id": 4439366277889630999
+    },
+    "firing_failure_alerts": [
+      {
+        "metric": {
+          "__name__": "ALERTS",
+          "alertname": "ShopVNPipelineFailed",
+          "alertstate": "firing",
+          "instance": "pipeline-monitor:9108",
+          "job": "shopvn-pipeline",
+          "severity": "critical",
+          "state": "failed"
+        },
+        "value": [
+          1794471911.114,
+          "1"
+        ]
+      }
+    ],
+    "recovery": {
+      "dag_run_id": "manual__verify_recovery_20261112T082511188546",
+      "state": "success",
+      "tasks": [
+        [
+          "initialize",
+          "success",
+          1
+        ],
+        [
+          "extract_snapshot",
+          "success",
+          1
+        ],
+        [
+          "transform_candidate",
+          "success",
+          1
+        ],
+        [
+          "publish_finance",
+          "success",
+          1
+        ],
+        [
+          "verify_and_finish",
+          "success",
+          1
+        ],
+        [
+          "finalize",
+          "success",
+          1
+        ],
+        [
+          "validate_candidate",
+          "success",
+          2
+        ]
+      ]
+    },
+    "monitor_status": {
+      "services": {
+        "minio": true,
+        "trino": true,
+        "airflow_api": true,
+        "airflow_scheduler": true,
+        "airflow_dag_processor": true,
+        "airflow_metadatabase": true,
+        "source_postgres": true,
+        "source_sftp": true,
+        "platform_postgres": true
+      },
+      "latest_run": {
+        "run_key": "389f5591154266fde3399201",
+        "dag_id": "shopvn_direct_finance",
+        "dag_run_id": "manual__verify_recovery_20261112T082511188546",
+        "run_type": "manual",
+        "business_date": "2026-06-30",
+        "status": "success",
+        "stage": "complete",
+        "started_at": "2026-11-12 08:25:14.293915+00:00",
+        "finished_at": "2026-11-12 08:27:31.433095+00:00",
+        "snapshot_id": "c785d5b88c3f48e188bcd196a8227dd1",
+        "candidate_snapshot_id": 1925885024017980244,
+        "source_amount": "49737232800.00",
+        "candidate_amount": "49737232800.00",
+        "amount_delta": "0.00",
+        "dq_passed": true,
+        "source_min_date": "2026-06-01",
+        "source_max_date": "2026-06-30",
+        "published": true,
+        "error_class": null,
+        "attempts": 2,
+        "rule_version": "1.1"
+      },
+      "inventory": {
+        "run_key": "d7135da936019923fb26a577",
+        "dag_run_id": "scheduled__2026-11-11T17:00:00+00:00",
+        "mode": "eod",
+        "business_date": "2026-11-11",
+        "snapshot_id": "1f54077fb2284b15984db7eafaa1d397",
+        "observed_at": "2026-11-11 17:00:02.153998+00:00",
+        "cutoff_at": "2026-11-11 17:00:00+00:00",
+        "capture_lag_seconds": 2.153998,
+        "eod_eligible": true,
+        "status": "success",
+        "rows": 2000,
+        "stock_qty": 5053681,
+        "current_published": true,
+        "eod_published": true,
+        "started_at": "2026-11-11 17:00:01.331330+00:00",
+        "finished_at": "2026-11-11 17:00:27.111961+00:00"
+      },
+      "inventory_current": {
+        "run_key": "d7135da936019923fb26a577",
+        "dag_run_id": "scheduled__2026-11-11T17:00:00+00:00",
+        "mode": "eod",
+        "business_date": "2026-11-11",
+        "snapshot_id": "1f54077fb2284b15984db7eafaa1d397",
+        "observed_at": "2026-11-11 17:00:02.153998+00:00",
+        "cutoff_at": "2026-11-11 17:00:00+00:00",
+        "capture_lag_seconds": 2.153998,
+        "eod_eligible": true,
+        "status": "success",
+        "rows": 2000,
+        "stock_qty": 5053681,
+        "current_published": true,
+        "eod_published": true,
+        "started_at": "2026-11-11 17:00:01.331330+00:00",
+        "finished_at": "2026-11-11 17:00:27.111961+00:00"
+      },
+      "last_eod_business_date": "2026-11-11",
+      "marketplace": {
+        "run_key": "dbd5918129997373474373b2",
+        "dag_run_id": "manual__s2_recovery_20261112T081245170499",
+        "run_type": "manual",
+        "start_date": "2026-06-01",
+        "end_date": "2026-06-30",
+        "status": "success",
+        "capture_id": "7950cf02dfef4645baec2c85725c2505",
+        "expected_files": 90,
+        "verified_files": 85,
+        "missing_files": 3,
+        "rejected_files": 2,
+        "accepted_rows": 63103,
+        "reported_net": "606161750704.00",
+        "gate_passed": true,
+        "published": true,
+        "coverage_complete": false,
+        "started_at": "2026-11-12 08:12:48.432464+00:00",
+        "finished_at": "2026-11-12 08:14:06.979746+00:00",
+        "reconciliation_delta": "0.00",
+        "formula_warnings": null,
+        "excluded_status_rows": null
+      },
+      "open_alerts": [
+        {
+          "kind": "pipeline_failed",
+          "n": 1
+        },
+        {
+          "kind": "task_retry",
+          "n": 2
+        },
+        {
+          "kind": "marketplace_incomplete",
+          "n": 2
+        }
+      ],
+      "open_alerts_by_run": [
+        {
+          "run_key": "5fd5ab113442f0a078aa8b47",
+          "kind": "task_retry",
+          "n": 2
+        },
+        {
+          "run_key": "5fd5ab113442f0a078aa8b47",
+          "kind": "pipeline_failed",
+          "n": 1
+        },
+        {
+          "run_key": "dbd5918129997373474373b2",
+          "kind": "marketplace_incomplete",
+          "n": 1
+        },
+        {
+          "run_key": "23e1501320201c46622ae8b9",
+          "kind": "marketplace_incomplete",
+          "n": 1
+        }
+      ],
+      "last_poll": "2026-11-12T08:27:43.852442+00:00"
+    },
+    "certified_snapshot_id": 6974095290032123794,
+    "fin02_total_vnd": "1648602104364.00",
+    "grafana": {
+      "title": "ShopVN \u2014 Pipeline & Data Quality",
+      "panels": 19,
+      "provisioned": true
+    },
+    "deadline_verification": "08:00 policy covered by fixed-clock unit tests; native 30-minute expiry not awaited in this smoke test",
+    "finished_at_utc": "2026-11-12T08:27:51.321442+00:00"
+  },
+  "three_fresh_processes": {
+    "status": "passed",
+    "capture_id": "8ebeb079a440474bb827d539ce66db82",
+    "before_snapshot": 4291438684944889303,
+    "runs": [
+      {
+        "run_key": "daecce88651e4c72b5538e91",
+        "accepted_rows": 63103,
+        "marketplace_rows": 63103,
+        "approval": {
+          "passed": true,
+          "candidate_sha256": "7f674c9215cd0931cfab67008e323ae0a09b5cde8a7746f70d89df477f09585c",
+          "source_reported_net": "606161750704",
+          "reported_net_total": "606161750704.00",
+          "reconciliation_delta": "0.00",
+          "direct_reference_scopes": 60,
+          "checked_scopes": 85,
+          "checked_rows": 90
+        }
+      },
+      {
+        "run_key": "a7fd7e6859a049ada371f036",
+        "accepted_rows": 63103,
+        "marketplace_rows": 63103,
+        "approval": {
+          "passed": true,
+          "candidate_sha256": "4f214ddc8964b335f9c7e013a982e4532d023762bfd62df5f465366bfb00b4db",
+          "source_reported_net": "606161750704",
+          "reported_net_total": "606161750704.00",
+          "reconciliation_delta": "0.00",
+          "direct_reference_scopes": 60,
+          "checked_scopes": 85,
+          "checked_rows": 90
+        }
+      },
+      {
+        "run_key": "c163453e6db64ca7a4802cba",
+        "accepted_rows": 63103,
+        "marketplace_rows": 63103,
+        "approval": {
+          "passed": true,
+          "candidate_sha256": "d33dc2ae7dd095fa52e2ab8c65ac0397173417ad65fc77b5454107d04100d5aa",
+          "source_reported_net": "606161750704",
+          "reported_net_total": "606161750704.00",
+          "reconciliation_delta": "0.00",
+          "direct_reference_scopes": 60,
+          "checked_scopes": 85,
+          "checked_rows": 90
+        }
+      }
+    ],
+    "after_snapshot": 4291438684944889303
+  },
+  "final_actual_smoke": {
+    "run_id": "manual__s2_final_20261112T084749302465",
+    "state": "success",
+    "tasks": [
+      [
+        "initialize",
+        "success",
+        1
+      ],
+      [
+        "capture_source",
+        "success",
+        1
+      ],
+      [
+        "prepare_candidate",
+        "success",
+        1
+      ],
+      [
+        "validate_candidate",
+        "success",
+        1
+      ],
+      [
+        "publish_finance",
+        "success",
+        1
+      ],
+      [
+        "verify_and_finish",
+        "success",
+        1
+      ],
+      [
+        "finalize",
+        "success",
+        1
+      ]
+    ],
+    "status": "passed",
+    "run_key": "229dcad9f537b8431048e3d2"
+  },
+  "source": {
+    "capture_id": "4c52e9947d1a4ad2ba0138a1c08e36a8",
+    "observed_at": "2026-11-12T08:47:53.315213+00:00",
+    "completed_at": "2026-11-12T08:47:57.883649+00:00",
+    "states": {
+      "verified": 85,
+      "missing": 3,
+      "checksum_mismatch": 2
+    },
+    "accepted_rows": 63103,
+    "excluded_status_rows": 7622,
+    "formula_warnings": 14
+  },
+  "publication": {
+    "publication_id": "229dcad9f537b8431048e3d2",
+    "approval": {
+      "passed": true,
+      "candidate_sha256": "aefd3968c67b7865058582b4627fd15babbe4dcaf1b8f9d51ff05697dddcf0b6",
+      "source_reported_net": "606161750704",
+      "reported_net_total": "606161750704.00",
+      "reconciliation_delta": "0.00",
+      "direct_reference_scopes": 60,
+      "checked_scopes": 85,
+      "checked_rows": 90
+    },
+    "sales_line_source_counts": [
+      [
+        "marketplace/lazada",
+        18119,
+        18119
+      ],
+      [
+        "marketplace/shopee",
+        32266,
+        32266
+      ],
+      [
+        "marketplace/tiktok",
+        12718,
+        12718
+      ],
+      [
+        "postgres/shopvn",
+        444142,
+        444142
+      ]
+    ],
+    "finance_columns": [
+      "channel",
+      "merchandise",
+      "reported_net",
+      "eligible_orders",
+      "units"
+    ],
+    "finance": [
+      [
+        "direct_app",
+        "663625520691.00",
+        null,
+        44204,
+        275192
+      ],
+      [
+        "direct_web",
+        "1003111677283.00",
+        null,
+        66707,
+        415643
+      ],
+      [
+        "lazada",
+        "194029574690.00",
+        "176617926552.00",
+        15975,
+        88278
+      ],
+      [
+        "shopee",
+        "342201030331.00",
+        "306236237684.00",
+        28349,
+        155418
+      ],
+      [
+        "tiktok",
+        "133375092039.00",
+        "123307586468.00",
+        11157,
+        60762
+      ]
+    ],
+    "unavailable_scope_columns": [
+      "business_date",
+      "channel",
+      "state",
+      "reported_net"
+    ],
+    "unavailable_scopes": [
+      [
+        "2026-06-04",
+        "tiktok",
+        "missing",
+        null
+      ],
+      [
+        "2026-06-09",
+        "tiktok",
+        "checksum_mismatch",
+        null
+      ],
+      [
+        "2026-06-11",
+        "tiktok",
+        "missing",
+        null
+      ],
+      [
+        "2026-06-17",
+        "lazada",
+        "missing",
+        null
+      ],
+      [
+        "2026-06-23",
+        "tiktok",
+        "checksum_mismatch",
+        null
+      ]
+    ],
+    "registry_snapshot_id": 7026857569199007228
+  },
+  "monitoring": {
+    "services": {
+      "minio": true,
+      "trino": true,
+      "airflow_api": true,
+      "airflow_scheduler": true,
+      "airflow_dag_processor": true,
+      "airflow_metadatabase": true,
+      "source_postgres": true,
+      "source_sftp": true,
+      "platform_postgres": true
+    },
+    "latest_marketplace": {
+      "run_key": "229dcad9f537b8431048e3d2",
+      "dag_run_id": "manual__s2_final_20261112T084749302465",
+      "run_type": "manual",
+      "start_date": "2026-06-01",
+      "end_date": "2026-06-30",
+      "status": "success",
+      "capture_id": "4c52e9947d1a4ad2ba0138a1c08e36a8",
+      "expected_files": 90,
+      "verified_files": 85,
+      "missing_files": 3,
+      "rejected_files": 2,
+      "accepted_rows": 63103,
+      "reported_net": "606161750704.00",
+      "gate_passed": true,
+      "published": true,
+      "coverage_complete": false,
+      "started_at": "2026-11-12 08:47:52.877839+00:00",
+      "finished_at": "2026-11-12 08:48:59.207401+00:00",
+      "reconciliation_delta": "0.00",
+      "formula_warnings": 14,
+      "excluded_status_rows": 7622,
+      "capture_completed_at": "2026-11-12 08:47:57.883649+00:00"
+    },
+    "grafana_panels": 31,
+    "prometheus_rules": [
+      "ShopVNServiceDown",
+      "ShopVNPipelineFailed",
+      "ShopVNDailyDeadlineMissed",
+      "ShopVNReconciliationMismatch",
+      "ShopVNExporterUnavailable",
+      "ShopVNMonitorStale",
+      "ShopVNDQGateFailed",
+      "ShopVNInventoryFailed",
+      "ShopVNInventoryEODMissing",
+      "ShopVNMarketplaceFailed",
+      "ShopVNMarketplaceIncomplete",
+      "ShopVNMarketplaceReconciliation",
+      "ShopVNMarketplaceDeadline"
+    ],
+    "open_alerts": [
+      {
+        "kind": "pipeline_failed",
+        "n": 1
+      },
+      {
+        "kind": "task_retry",
+        "n": 2
+      },
+      {
+        "kind": "marketplace_incomplete",
+        "n": 6
+      }
+    ]
+  },
+  "packaging": {
+    "wheel_sha256": "c5cec43a93a4082df45847555a104e16fb2921b9e7d002f0d605bae8a625ff93",
+    "source_matches_wheel": true,
+    "isolated_job_imports_and_sql": "passed"
+  },
+  "review": "Implementation/self-verification complete; independent team review and stage-close approval remain with user",
+  "limits": [
+    "June marketplace is partial (3 missing, 2 checksum mismatch); never substitute zero",
+    "Marketplace reported net is not bank cash; settlement T+15 is only scheduled",
+    "Late arrival is fixture/mock-clock verification, not actual delayed arrival from baked source",
+    "Certified Finance table commits atomically; all Gold tables are not one transaction",
+    "Frozen June inputs do not prove current November D-1 freshness/SLA",
+    "Observed SCD/actual inventory rules and no-June-stock-backfill remain unchanged",
+    "No outbound notifications, API ingestion, Kafka, Superset or production HA certification"
+  ]
+}

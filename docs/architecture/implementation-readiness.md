@@ -60,3 +60,9 @@ Core spike, direct Finance và Airflow/monitoring đã có [bằng chứng thự
 Chi tiết: [runbook chặng 1](../runbooks/stage1-postgres-inventory.md), [bằng chứng aggregate](../verification/stage1.json). Stage 1 không triển khai Gold transaction/review marts, Kafka, SFTP/API hoặc Superset. **Bước tiếp theo đã xác nhận là S2 — SFTP + Finance marketplace**, bắt đầu S2-01 theo [kế hoạch chính](mvp-implementation-plan.md). Dòng định hướng Kafka trước đây là ghi nhận sai đã được sửa ngày 12/11/2026, không phải một thay đổi kế hoạch được duyệt. Thứ tự S3–S7 trong kế hoạch là đề xuất chờ duyệt; không dùng readiness để tự đổi thứ tự stage.
 
 Definition of Done phải có cả kết quả đúng, khả năng chạy lại, lỗi nguồn được xử lý và visibility trên dashboard/log.
+
+## S2 — Implementation và self-verification PASS ngày 12/11/2026
+
+SFTP/marketplace Finance đã triển khai theo [kế hoạch S2](mvp-implementation-plan.md), không phải Kafka. Có file version/manifest, checksum-before-parse, Bronze/Silver, conformed marketplace sales lines, FIN04–07/FIN10–12, candidate/source/Trino gate, DAG 04:00 VN và local monitoring. 85 valid/3 missing/2 checksum mismatch, 63103 rows; source thiếu/corrupt vẫn có coverage partial.
+
+122 unit tests, 29 Spark cases, 3 fresh-process SFTP replays và actual Airflow failure/recovery đã kiểm chứng. Direct-after-marketplace giữ FIN02 không đổi. Chi tiết tại [runbook S2](../runbooks/stage2-marketplace-finance.md) và [verification index](../verification/README.md). Nhóm còn review/duyệt đóng stage; không tự mở S3–S7.

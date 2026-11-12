@@ -56,3 +56,9 @@ Chi tiết chặng 1: [runbook](../runbooks/stage1-postgres-inventory.md). Sourc
 ## Late events và Kafka
 
 MVP simulator tách data_origin. Event_id ổn định; cùng ID/cùng payload là replay, khác payload là conflict vào DLQ. Không bật watermark drop để mất dữ liệu tài chính khi chưa chốt lateness contract; Bronze giữ mọi event, Silver durable dedup/merge và batch reconciliation. Đây là at-least-once + idempotent processing, chưa chứng nhận end-to-end exactly-once.
+
+## Implementation S2
+
+SFTP contract version 1 ở contracts/marketplace.py, business rule vẫn 1.1. Verified file content versions bất biến; source registry của publication hiện hành được đọc bằng **registry_snapshot_id** trong certified mart, không lấy latest của một candidate chưa publish. Replacement rebuild phần đóng góp file, bao gồm dòng bị bỏ; missing/corrupt giữ last accepted với retained_unverified hoặc NULL nếu chưa từng có accepted version. Không điền 0 cho missing.
+
+Trino validation đối soát exact counts/units/FIN04/FIN05/AOV/settlement và source SQL PostgreSQL FIN01/FIN02. Publisher kiểm tra candidate/parent/reference snapshot, ghi shared Silver/fact rồi certified Finance table cuối; không phải multi-table atomicity. Same-publication retry chỉ skip khi đúng source_candidate_snapshot_id; candidate đã reprepare khác phải dùng run mới. Xem [runbook S2](../runbooks/stage2-marketplace-finance.md).
